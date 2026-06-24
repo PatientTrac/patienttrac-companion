@@ -17,6 +17,7 @@ export const ACCENTS: Record<string, { c: string; from: string; to: string }> = 
   vitals:     { c: C.red,    from: '#ff6b6b', to: '#ec4899' },
   journal:    { c: C.gold,   from: '#c9a96e', to: '#e8cc9a' },
   messages:   { c: C.cyan,   from: '#00d4ff', to: '#34d399' },
+  progress:   { c: C.gold,   from: '#c9a96e', to: '#00d4ff' },
   treatment:  { c: C.mint,   from: '#34d399', to: '#1f9e8f' },
 }
 
@@ -48,6 +49,7 @@ export function Ico({ name, size = 22, color = 'currentColor', stroke = 1.7 }:
     diet: <><path d="M7 3v8a3 3 0 0 0 6 0V3M10 3v18" /><path d="M17 3c-1.5 1-2 3-2 6s.5 4 2 4v8" /></>,
     exercise: <><path d="M6 8v8M18 8v8M4 10v4M20 10v4M6 12h12" /></>,
     vitals: <path d="M3 12h4l2-6 4 12 2-6h6" />,
+    chart: <><path d="M4 20V10M10 20V4M16 20v-7M21 20H3" /></>,
     journal: <><rect x="5" y="3" width="14" height="18" rx="2" /><path d="M9 8h6M9 12h6M9 16h3" /></>,
     plan: <><path d="M9 4h6v3H9z" /><rect x="5" y="4" width="14" height="17" rx="2" /><path d="M9 12l2 2 4-4" /></>,
     check: <polyline points="4 12 9 17 20 6" />,

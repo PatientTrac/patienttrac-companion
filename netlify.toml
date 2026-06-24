@@ -13,6 +13,24 @@
   force = true
 
 [[redirects]]
+  from = "/api/companion-connect"
+  to = "/.netlify/functions/companion-connect"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/companion-oauth-callback"
+  to = "/.netlify/functions/companion-oauth-callback"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/companion-sync"
+  to = "/.netlify/functions/companion-sync"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

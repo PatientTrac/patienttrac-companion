@@ -109,3 +109,18 @@ export async function markStaffMessagesRead() {
     .update({ read_by_patient: true }).eq('sender_role', 'staff').eq('read_by_patient', false)
   if (error) throw error
 }
+
+// ── Progress trends (patient's own data) ────────────────────
+export type Trends = {
+  window_days: number
+  active_meds: number
+  adherence: { d: string; n: number }[]
+  journal: { d: string; mood: number | null; pain: number | null; energy: number | null }[]
+  vitals: Record<string, { d: string; v: number }[]>
+  summary: { avg_mood: number | null; avg_pain: number | null; adherence_rate: number | null; pain_trend: string }
+}
+export async function getMyTrends(days = 30): Promise<Trends> {
+  const { data, error } = await cr().rpc('companion_my_trends', { p_days: days })
+  if (error) throw error
+  return data as Trends
+}
