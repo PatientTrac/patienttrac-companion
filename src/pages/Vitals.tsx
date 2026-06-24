@@ -4,7 +4,16 @@ import { useT } from '../lib/i18n'
 import { useAuth, ctxOf } from '../lib/auth'
 import { listVitals, addVital } from '../lib/data'
 
-const DEVICES = ['Apple Health', 'Google Health Connect', 'Fitbit', 'Withings']
+// Device sync is not live yet. Apple Health / Google Health Connect are
+// on-device APIs that require the native mobile app; Fitbit / Withings are
+// server-side and pending developer credentials + a signed BAA. These tiles
+// are informational, not actions.
+const DEVICES: { label: string; status: 'app' | 'soon' }[] = [
+  { label: 'Apple Health', status: 'app' },
+  { label: 'Google Health Connect', status: 'app' },
+  { label: 'Fitbit', status: 'soon' },
+  { label: 'Withings', status: 'soon' },
+]
 const TYPES: [string, string][] = [
   ['heart_rate', 'bpm'], ['bp_systolic', 'mmHg'], ['spo2', '%'], ['weight_kg', 'kg'], ['temp_c', '°C'],
 ]
@@ -27,10 +36,10 @@ export default function Vitals() {
     <div className="cmp-fade-up">
       <SectionHeader icon="vitals" title={t('vit.title')} sub={t('vit.subtitle')} color={A.c} />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12, marginBottom: 22 }}>
-        {DEVICES.map(label => (
-          <Card key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}><Ico name="watch" size={22} color={A.c} /><span style={{ fontSize: 14.5, fontWeight: 600, color: C.text }}>{label}</span></div>
-            <span style={{ fontSize: 13, fontWeight: 700, color: C.mint, cursor: 'pointer' }}>{t('vit.connect')}</span>
+        {DEVICES.map(d => (
+          <Card key={d.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', opacity: 0.7 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}><Ico name="watch" size={22} color={A.c} /><span style={{ fontSize: 14.5, fontWeight: 600, color: C.text }}>{d.label}</span></div>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: C.subtle }}>{t(d.status === 'app' ? 'vit.requiresApp' : 'vit.comingSoon')}</span>
           </Card>
         ))}
       </div>

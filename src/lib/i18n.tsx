@@ -52,8 +52,8 @@ const EN: Dict = {
   'ex.aiDisclaimer': "This explains the kind of movement in your plan in general terms. It won't add new exercises — your physical therapist and care team set that. Stop and contact them if movement causes new or worse pain.",
   'ex.q1': 'Why are ankle pumps important?', 'ex.q2': 'What does range of motion mean?', 'ex.q3': 'How do I know if I am overdoing it?',
 
-  'vit.title': 'Vitals & devices', 'vit.subtitle': 'Connect a watch or device to record your vitals automatically — or add a reading by hand.',
-  'vit.connect': 'Connect', 'vit.recent': 'Recent readings', 'vit.none': 'No readings yet.', 'vit.add': 'Add reading', 'vit.value': 'Value',
+  'vit.title': 'Vitals & devices', 'vit.subtitle': 'Add a reading by hand below. Automatic sync from watches and devices is coming soon.',
+  'vit.connect': 'Connect', 'vit.requiresApp': 'Requires the mobile app', 'vit.comingSoon': 'Coming soon', 'vit.recent': 'Recent readings', 'vit.none': 'No readings yet.', 'vit.add': 'Add reading', 'vit.value': 'Value',
   'vit.disclaimer': "Readings from consumer watches and devices are for information only and aren't a medical diagnosis. If something doesn't feel right, contact your care team.",
   'vit.heart_rate': 'Heart rate', 'vit.bp_systolic': 'BP systolic', 'vit.spo2': 'SpO₂', 'vit.weight_kg': 'Weight', 'vit.temp_c': 'Temperature',
 
@@ -116,8 +116,8 @@ const ES: Dict = {
   'ex.aiDisclaimer': 'Explica en términos generales el tipo de movimiento de tu plan. No agregará ejercicios nuevos — eso lo define tu fisioterapeuta y equipo de cuidado. Detente y contáctalos si el movimiento causa dolor nuevo o peor.',
   'ex.q1': '¿Por qué son importantes los bombeos de tobillo?', 'ex.q2': '¿Qué significa rango de movimiento?', 'ex.q3': '¿Cómo sé si me estoy excediendo?',
 
-  'vit.title': 'Signos y dispositivos', 'vit.subtitle': 'Conecta un reloj o dispositivo para registrar tus signos automáticamente — o agrega una lectura a mano.',
-  'vit.connect': 'Conectar', 'vit.recent': 'Lecturas recientes', 'vit.none': 'Sin lecturas aún.', 'vit.add': 'Agregar lectura', 'vit.value': 'Valor',
+  'vit.title': 'Signos y dispositivos', 'vit.subtitle': 'Agrega una lectura a mano abajo. La sincronización automática desde relojes y dispositivos llegará pronto.',
+  'vit.connect': 'Conectar', 'vit.requiresApp': 'Requiere la app móvil', 'vit.comingSoon': 'Próximamente', 'vit.recent': 'Lecturas recientes', 'vit.none': 'Sin lecturas aún.', 'vit.add': 'Agregar lectura', 'vit.value': 'Valor',
   'vit.disclaimer': 'Las lecturas de relojes y dispositivos de consumo son solo informativas y no son un diagnóstico médico. Si algo no se siente bien, contacta a tu equipo de cuidado.',
   'vit.heart_rate': 'Frecuencia cardíaca', 'vit.bp_systolic': 'Presión sistólica', 'vit.spo2': 'SpO₂', 'vit.weight_kg': 'Peso', 'vit.temp_c': 'Temperatura',
 
@@ -180,8 +180,8 @@ const FR: Dict = {
   'ex.aiDisclaimer': "Ceci explique en termes généraux le type de mouvement de votre plan. Il n'ajoutera pas de nouveaux exercices — c'est votre kinésithérapeute et votre équipe qui les définissent. Arrêtez et contactez-les si le mouvement provoque une douleur nouvelle ou plus forte.",
   'ex.q1': 'Pourquoi les pompes de cheville sont-elles importantes ?', 'ex.q2': 'Que signifie amplitude de mouvement ?', 'ex.q3': 'Comment savoir si j\'en fais trop ?',
 
-  'vit.title': 'Constantes et appareils', 'vit.subtitle': 'Connectez une montre ou un appareil pour enregistrer vos constantes automatiquement — ou ajoutez une mesure à la main.',
-  'vit.connect': 'Connecter', 'vit.recent': 'Mesures récentes', 'vit.none': 'Aucune mesure.', 'vit.add': 'Ajouter une mesure', 'vit.value': 'Valeur',
+  'vit.title': 'Constantes et appareils', 'vit.subtitle': 'Ajoutez une mesure à la main ci-dessous. La synchronisation automatique des montres et appareils arrive bientôt.',
+  'vit.connect': 'Connecter', 'vit.requiresApp': "Nécessite l'application mobile", 'vit.comingSoon': 'Bientôt disponible', 'vit.recent': 'Mesures récentes', 'vit.none': 'Aucune mesure.', 'vit.add': 'Ajouter une mesure', 'vit.value': 'Valeur',
   'vit.disclaimer': "Les mesures des montres et appareils grand public sont fournies à titre informatif et ne constituent pas un diagnostic médical. Si quelque chose ne va pas, contactez votre équipe soignante.",
   'vit.heart_rate': 'Fréquence cardiaque', 'vit.bp_systolic': 'Pression systolique', 'vit.spo2': 'SpO₂', 'vit.weight_kg': 'Poids', 'vit.temp_c': 'Température',
 
