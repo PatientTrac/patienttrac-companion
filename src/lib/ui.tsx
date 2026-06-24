@@ -16,6 +16,7 @@ export const ACCENTS: Record<string, { c: string; from: string; to: string }> = 
   exercise:   { c: C.violet, from: '#8b7cff', to: '#6366f1' },
   vitals:     { c: C.red,    from: '#ff6b6b', to: '#ec4899' },
   journal:    { c: C.gold,   from: '#c9a96e', to: '#e8cc9a' },
+  messages:   { c: C.cyan,   from: '#00d4ff', to: '#34d399' },
   treatment:  { c: C.mint,   from: '#34d399', to: '#1f9e8f' },
 }
 

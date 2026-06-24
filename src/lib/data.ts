@@ -90,3 +90,22 @@ export async function getActivePlan(): Promise<CarePlan | null> {
 export async function logEducation(ctx: Ctx, care_plan_id: number | null, question: string, ai_answer: string) {
   await cr().from('companion_education').insert({ patient_id: ctx.patientId, org_id: ctx.orgId, care_plan_id, question, ai_answer, model: 'claude-sonnet-4-6' })
 }
+
+// ── Messages (patient ↔ care team) ──────────────────────────
+export type Message = { id: number; sender_role: 'patient' | 'staff'; body: string; created_at: string; read_by_patient: boolean }
+export async function listMessages(): Promise<Message[]> {
+  const { data, error } = await cr().from('companion_message')
+    .select('id,sender_role,body,created_at,read_by_patient').order('created_at', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as Message[]
+}
+export async function sendMessage(body: string) {
+  const { error } = await cr().rpc('companion_patient_send_message', { p_body: body })
+  if (error) throw error
+}
+export async function markStaffMessagesRead() {
+  // Patient acknowledges staff replies. RLS limits this to the patient's own thread.
+  const { error } = await cr().from('companion_message')
+    .update({ read_by_patient: true }).eq('sender_role', 'staff').eq('read_by_patient', false)
+  if (error) throw error
+}
