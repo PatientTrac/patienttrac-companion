@@ -4,3 +4,16 @@ body{background:#020a14;color:#e8eaf0;font-family:'DM Sans',system-ui,sans-serif
 a{color:inherit}
 h1,h2,h3{font-family:'Rajdhani',sans-serif;margin:0;line-height:1.15}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* ── Companion motion + gradient utilities ───────────────── */
+@keyframes cmpFadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes cmpFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes cmpShimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+.cmp-fade-up { animation: cmpFadeUp .5s ease-out both; }
+.cmp-float { animation: cmpFloat 5s ease-in-out infinite; }
+.cmp-stagger > * { animation: cmpFadeUp .5s ease-out both; }
+.cmp-stagger > *:nth-child(2) { animation-delay: .06s; }
+.cmp-stagger > *:nth-child(3) { animation-delay: .12s; }
+.cmp-stagger > *:nth-child(4) { animation-delay: .18s; }
+.cmp-stagger > *:nth-child(5) { animation-delay: .24s; }
+*:focus-visible { outline: 2px solid #34d399; outline-offset: 2px; }

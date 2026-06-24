@@ -1,62 +1,58 @@
 import { Link } from 'react-router-dom'
-import { C, Card, Ico, Spinner, useAsync } from '../lib/ui'
+import { C, Card, Ico, Spinner, Hero, GradientStat, ACCENTS, useAsync } from '../lib/ui'
+import { CareScene, AiNetwork } from '../lib/art'
+import { useT } from '../lib/i18n'
 import { listMeds, takenTodayIds, listDietToday, listActivityToday, listJournal, listVitals } from '../lib/data'
 
 export default function Today() {
-  const today = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })
+  const { t, lang } = useT()
+  const today = new Date().toLocaleDateString(lang, { weekday: 'long', month: 'long', day: 'numeric' })
   const { data, loading, error } = useAsync(async () => {
     const [meds, taken, diet, activity, journal, vitals] = await Promise.all([
       listMeds(), takenTodayIds(), listDietToday(), listActivityToday(), listJournal(), listVitals(),
     ])
     const todayStr = new Date().toISOString().slice(0, 10)
     const checkin = journal.some(j => j.entry_date === todayStr)
-    const v = vitals[0]
-    return { medsTaken: taken.length, medsTotal: meds.length, meals: diet.length, activity: activity.length, checkin, latestVital: v }
+    return { medsTaken: taken.length, medsTotal: meds.length, meals: diet.length, activity: activity.length, checkin, latestVital: vitals[0] }
   }, [])
 
   return (
-    <div>
-      <div style={{ marginBottom: 26 }}>
-        <h1 style={{ fontSize: 'clamp(28px,4vw,40px)', color: C.text }}>Welcome back</h1>
-        <p style={{ color: C.muted, marginTop: 6, fontSize: 15 }}>{today}</p>
-      </div>
-
-      <Card accent={C.mint} style={{ marginBottom: 22 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <Ico name="plan" size={20} color={C.mint} />
-          <span style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 600, fontSize: 18, color: C.text }}>Your care plan</span>
+    <div className="cmp-stagger">
+      <Hero style={{ marginBottom: 22 }}>
+        <div style={{ display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 260, flex: 1 }}>
+            <div style={{ fontFamily: 'DM Mono,monospace', fontSize: 12, color: C.mint, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 8 }}>{today}</div>
+            <h1 style={{ fontSize: 'clamp(28px,4vw,40px)', color: C.text, lineHeight: 1.05 }}>{t('today.greeting')}</h1>
+            <p style={{ color: C.muted, marginTop: 12, fontSize: 14.5, lineHeight: 1.65, maxWidth: 440 }}>{t('today.planBody')}</p>
+            <Link to="/treatment" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16, color: C.navy950, fontWeight: 700, fontFamily: 'Rajdhani,sans-serif', fontSize: 15, textDecoration: 'none', background: `linear-gradient(135deg, ${C.mint}, ${C.mintDk})`, borderRadius: 11, padding: '11px 18px', boxShadow: `0 8px 20px ${C.mint}33` }}>
+              {t('today.viewPlan')} <Ico name="arrow" size={16} color={C.navy950} />
+            </Link>
+          </div>
+          <div style={{ position: 'relative', flexShrink: 0 }} className="cmp-float">
+            <AiNetwork width={150} height={104} style={{ position: 'absolute', right: 12, top: -16, opacity: 0.6 }} />
+            <CareScene width={280} height={186} />
+          </div>
         </div>
-        <p style={{ fontSize: 14, color: C.muted, lineHeight: 1.6, marginBottom: 12 }}>
-          Take your medications as scheduled, keep up gentle movement, and log how you feel each day. Your care team is watching your progress between visits.
-        </p>
-        <Link to="/treatment" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: C.mint, fontWeight: 600, fontSize: 14, textDecoration: 'none' }}>
-          View plan & ask a question <Ico name="arrow" size={15} color={C.mint} />
-        </Link>
-      </Card>
+      </Hero>
 
-      {loading && <Spinner />}
+      {loading && <Spinner label={t('common.loading')} />}
       {error && <p style={{ color: C.red, fontSize: 14 }}>{error}</p>}
       {data && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 14 }}>
           {([
-            ['pill', 'Medications', `${data.medsTaken} of ${data.medsTotal} taken today`, C.mint, '/medications'],
-            ['journal', "Today's check-in", data.checkin ? 'Completed' : 'Not done yet', data.checkin ? C.green : C.amber, '/journal'],
-            ['vitals', 'Latest vital', data.latestVital ? `${data.latestVital.type.replace('_', ' ')} · ${data.latestVital.value} ${data.latestVital.unit ?? ''}` : 'No readings yet', C.cyan, '/vitals'],
-            ['diet', 'Meals logged', `${data.meals} today`, C.mint, '/diet'],
-            ['exercise', 'Activity logged', `${data.activity} today`, C.mint, '/exercise'],
-          ] as [string, string, string, string, string][]).map(([ic, t, s, col, to]) => (
-            <Link key={t} to={to} style={{ textDecoration: 'none' }}>
-              <Card style={{ height: '100%' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                  <span style={{ width: 38, height: 38, borderRadius: 10, background: col + '1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Ico name={ic} size={20} color={col} /></span>
-                  <span style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 600, fontSize: 16, color: C.text }}>{t}</span>
-                </div>
-                <div style={{ fontSize: 14, color: C.muted }}>{s}</div>
-              </Card>
+            ['/medications', 'pill', t('today.meds'), t('today.medsStatus', { taken: data.medsTaken, total: data.medsTotal }), ACCENTS.medications],
+            ['/journal', 'journal', t('today.checkin'), data.checkin ? t('today.checkinDone') : t('today.checkinNot'), data.checkin ? { from: C.green, to: C.mint } : { from: C.amber, to: C.gold }],
+            ['/vitals', 'vitals', t('today.vital'), data.latestVital ? `${t('vit.' + data.latestVital.type)} · ${data.latestVital.value} ${data.latestVital.unit ?? ''}` : t('today.noReadings'), ACCENTS.vitals],
+            ['/diet', 'diet', t('today.meals'), t('today.count', { n: data.meals }), ACCENTS.diet],
+            ['/exercise', 'exercise', t('today.activity'), t('today.count', { n: data.activity }), ACCENTS.exercise],
+          ] as [string, string, string, string, { from: string; to: string }][]).map(([to, ic, label, value, a]) => (
+            <Link key={to} to={to} style={{ textDecoration: 'none' }}>
+              <GradientStat icon={ic} label={label} value={<span style={{ fontSize: 16 }}>{value}</span>} from={a.from} to={a.to} />
             </Link>
           ))}
         </div>
       )}
+      <p style={{ fontSize: 12, color: C.subtle, marginTop: 18 }}>{t('common.emergency')}</p>
     </div>
   )
 }

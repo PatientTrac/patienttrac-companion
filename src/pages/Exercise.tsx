@@ -1,36 +1,33 @@
 import { useState } from 'react'
-import { C, Card, Ico, Button, Input, Spinner, useAsync } from '../lib/ui'
+import { C, Card, Ico, Button, Input, Spinner, SectionHeader, ACCENTS, useAsync } from '../lib/ui'
+import { useT } from '../lib/i18n'
 import { useAuth, ctxOf } from '../lib/auth'
 import { listActivityToday, addActivity } from '../lib/data'
 import AiPanel from '../lib/AiPanel'
 
 export default function Exercise() {
+  const { t } = useT()
   const auth = useAuth(); const ctx = ctxOf(auth)
   const { data, loading, error, reload } = useAsync(() => listActivityToday(), [])
   const [name, setName] = useState(''); const [detail, setDetail] = useState('')
+  const A = ACCENTS.exercise
 
-  const add = async () => {
-    if (!name.trim()) return
-    await addActivity(ctx, name.trim(), detail.trim()); setName(''); setDetail(''); reload()
-  }
+  const add = async () => { if (!name.trim()) return; await addActivity(ctx, name.trim(), detail.trim()); setName(''); setDetail(''); reload() }
 
   return (
-    <div>
-      <h1 style={{ fontSize: 'clamp(26px,4vw,36px)', color: C.text }}>Exercise & movement</h1>
-      <p style={{ color: C.muted, margin: '6px 0 22px', fontSize: 15 }}>Track the gentle movement and rehab exercises from your plan, and learn the why behind them.</p>
-
-      <Card style={{ marginBottom: 20 }}>
+    <div className="cmp-fade-up">
+      <SectionHeader icon="exercise" title={t('ex.title')} sub={t('ex.subtitle')} color={A.c} />
+      <Card accent={A.c} style={{ marginBottom: 20 }}>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Input placeholder="Exercise (e.g. heel slides)" value={name} onChange={e => setName(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
-          <Input placeholder="Sets / reps / minutes" value={detail} onChange={e => setDetail(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} style={{ minWidth: 150 }} />
-          <Button onClick={add}><Ico name="plus" size={16} color={C.navy950} /> Log</Button>
+          <Input placeholder={t('ex.name')} value={name} onChange={e => setName(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+          <Input placeholder={t('ex.detail')} value={detail} onChange={e => setDetail(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} style={{ minWidth: 150 }} />
+          <Button onClick={add}><Ico name="plus" size={16} color={C.navy950} /> {t('ex.log')}</Button>
         </div>
       </Card>
-
-      {loading && <Spinner />}
+      {loading && <Spinner label={t('common.loading')} />}
       {error && <p style={{ color: C.red, fontSize: 14 }}>{error}</p>}
       <div style={{ display: 'grid', gap: 10, marginBottom: 24 }}>
-        {data && data.length === 0 && <p style={{ color: C.subtle, fontSize: 14 }}>Nothing logged yet today.</p>}
+        {data && data.length === 0 && <p style={{ color: C.subtle, fontSize: 14 }}>{t('ex.empty')}</p>}
         {data && data.map(m => (
           <Card key={m.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
@@ -41,11 +38,10 @@ export default function Exercise() {
           </Card>
         ))}
       </div>
-
-      <AiPanel topic="exercise" label="Learn about your movement plan"
+      <AiPanel topic="exercise" label={t('ex.aiLabel')}
         context="Patient is recovering after surgery with a physical-therapy plan of gentle range-of-motion and strengthening exercises. Reinforce the existing plan only."
-        suggested={['Why are ankle pumps important?', 'What does range of motion mean?', 'How do I know if I am overdoing it?']}
-        disclaimer="This explains the kind of movement in your plan in general terms. It won't add new exercises or change your routine — your physical therapist and care team set that. Stop and contact them if movement causes new or worse pain; call your local emergency number in an emergency."
+        suggested={[t('ex.q1'), t('ex.q2'), t('ex.q3')]}
+        disclaimer={t('ex.aiDisclaimer') + ' ' + t('common.emergency')}
         storageKey="cmp_exercise_ai" />
     </div>
   )
