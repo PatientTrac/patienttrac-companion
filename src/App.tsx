@@ -1,5 +1,7 @@
 import { NavLink, Routes, Route, Navigate } from 'react-router-dom'
-import { C, PMark, Ico } from './lib/ui'
+import { C, PMark, Ico, Spinner } from './lib/ui'
+import { AuthProvider, useAuth } from './lib/auth'
+import Auth from './pages/Auth'
 import Today from './pages/Today'
 import Medications from './pages/Medications'
 import Diet from './pages/Diet'
@@ -18,10 +20,11 @@ const NAV: [string, string, string][] = [
   ['plan', 'Treatment & learning', '/treatment'],
 ]
 
-export default function App() {
+function Shell() {
+  const { signOut } = useAuth()
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '264px 1fr', minHeight: '100dvh' }}>
-      <aside className="cmp-side" style={{ background: C.navy900, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '22px 16px', position: 'sticky', top: 0, height: '100dvh' }}>
+      <aside style={{ background: C.navy900, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '22px 16px', position: 'sticky', top: 0, height: '100dvh' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28, padding: '0 6px' }}>
           <PMark size={34} />
           <span style={{ lineHeight: 1 }}>
@@ -42,8 +45,11 @@ export default function App() {
             </NavLink>
           ))}
         </nav>
-        <div style={{ position: 'absolute', bottom: 20, left: 16, right: 16, fontSize: 11, color: C.subtle, display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Ico name="lock" size={13} color={C.subtle} /> Private to you & your care team
+        <div style={{ position: 'absolute', bottom: 18, left: 16, right: 16 }}>
+          <button onClick={() => signOut()} style={{ width: '100%', background: 'transparent', border: `1px solid ${C.subtle}`, color: C.muted, borderRadius: 9, padding: '9px 12px', fontSize: 13, cursor: 'pointer', marginBottom: 10 }}>Sign out</button>
+          <div style={{ fontSize: 11, color: C.subtle, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Ico name="lock" size={13} color={C.subtle} /> Private to you & your care team
+          </div>
         </div>
       </aside>
 
@@ -62,4 +68,16 @@ export default function App() {
       </main>
     </div>
   )
+}
+
+function Gate() {
+  const { loading, session, patientId } = useAuth()
+  if (loading) return <div style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center' }}><Spinner label="Loading your companion…" /></div>
+  if (!session) return <Auth stage="auth" />
+  if (patientId == null) return <Auth stage="invite" />
+  return <Shell />
+}
+
+export default function App() {
+  return <AuthProvider><Gate /></AuthProvider>
 }

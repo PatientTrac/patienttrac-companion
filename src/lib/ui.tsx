@@ -75,11 +75,35 @@ export function Button({ children, onClick, kind = 'primary' }:
   return <button onClick={onClick} style={styles}>{children}</button>
 }
 
-// Simple localStorage-backed state (Supabase swap-in point — see lib/data.ts)
+// Simple localStorage-backed state (used pre-Supabase; retained for fallback)
 export function useLocal<T>(key: string, initial: T): [T, (v: T) => void] {
   const [val, setVal] = useState<T>(() => {
     try { const r = localStorage.getItem(key); return r ? JSON.parse(r) as T : initial } catch { return initial }
   })
   useEffect(() => { try { localStorage.setItem(key, JSON.stringify(val)) } catch { /* ignore */ } }, [key, val])
   return [val, setVal]
+}
+
+export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return <input {...props} style={{ background: C.navy900, border: `1px solid ${C.subtle}`, borderRadius: 9, padding: '12px 14px', color: C.text, fontSize: 14, fontFamily: 'DM Sans,sans-serif', width: '100%', ...(props.style || {}) }} />
+}
+
+export function Spinner({ label = 'Loading…' }: { label?: string }) {
+  return <div style={{ color: C.muted, fontSize: 14, padding: '14px 0' }}>{label}</div>
+}
+
+// Tiny async loader for page data
+export function useAsync<T>(fn: () => Promise<T>, deps: unknown[] = []) {
+  const [data, setData] = useState<T | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    let on = true; setLoading(true); setError(null)
+    fn().then(d => { if (on) { setData(d); setLoading(false) } })
+        .catch(e => { if (on) { setError(e?.message || 'Error'); setLoading(false) } })
+    return () => { on = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...deps, n])
+  return { data, loading, error, reload: () => setN(x => x + 1) }
 }

@@ -38,3 +38,24 @@ ANTHROPIC_API_KEY=...        # server-only (companion-ai function)
 - The education assistant is intentionally constrained and is not a medical device.
 
 *PatientTrac Companion · v0.1.0 · HIPAA-aligned*
+
+---
+
+## Phase 2 — Patient auth & live data (this build)
+
+Companion now uses **Supabase Auth** for patients and reads/writes the real `cr` tables (RLS-scoped per patient). `localStorage` is gone.
+
+**Required env (client):** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+**Required env (server):** `ANTHROPIC_API_KEY` (AI panels)
+
+**DB:** apply migrations in order — `028_companion_module.sql`, then `029_companion_patient_linking.sql`.
+
+**Account linking (secure):** a patient's login is bound to a `cr.patient` record only by a staff-issued, single-use invite code — never by self-claimed email. Flow: patient signs up / signs in → enters invite code → `cr.redeem_patient_invite()` links `auth.uid()` to the patient.
+
+**To test the whole loop:** in the SQL editor (as a staff/super_admin session) issue a code for a seeded patient:
+```sql
+select cr.create_patient_invite(<patient_id>);
+```
+Then in the app: sign up → enter that code → log a med / meal / check-in and confirm rows land in the `cr.companion_*` tables.
+
+**Next (Phase 3):** the care-team dashboard (staff view of adherence, journal red-flags, vitals trends), device sync (Apple Health / Health Connect / Fitbit / Withings), and care-plan authoring from Forge.

@@ -7,13 +7,14 @@ const FALLBACK =
   "I can explain general, plan-based guidance, but I'm having trouble connecting right now. " +
   'For anything specific to your situation, please reach out to your care team.'
 
-export default function AiPanel({ topic, label, context, suggested, disclaimer, storageKey }: {
+export default function AiPanel({ topic, label, context, suggested, disclaimer, storageKey, onExchange }: {
   topic: 'diet' | 'exercise' | 'treatment'
   label: string
   context: string
   suggested: string[]
   disclaimer: string
   storageKey: string
+  onExchange?: (question: string, answer: string) => void
 }) {
   const [msgs, setMsgs] = useLocal<Msg[]>(storageKey, [])
   const [q, setQ] = useState('')
@@ -32,7 +33,9 @@ export default function AiPanel({ topic, label, context, suggested, disclaimer, 
       })
       if (!res.ok) throw new Error('bad')
       const data = await res.json()
-      setMsgs([...next, { role: 'assistant', text: data.text || FALLBACK }])
+      const answer = data.text || FALLBACK
+      setMsgs([...next, { role: 'assistant', text: answer }])
+      try { onExchange?.(text, answer) } catch { /* non-fatal */ }
     } catch {
       setMsgs([...next, { role: 'assistant', text: FALLBACK }])
     } finally { setBusy(false) }
