@@ -9,6 +9,8 @@ type AuthState = {
   session: Session | null
   patientId: number | null
   orgId: string | null
+  staffOrgId: string | null
+  staffRole: string | null
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<{ needsConfirm: boolean }>
   signOut: () => Promise<void>
@@ -24,15 +26,38 @@ export const useAuth = () => {
 export const ctxOf = (a: AuthState): Ctx => ({ patientId: a.patientId as number, orgId: a.orgId as string })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [loading, setLoading] = useState(true)
-  const [session, setSession] = useState<Session | null>(null)
-  const [patientId, setPatientId] = useState<number | null>(null)
-  const [orgId, setOrgId] = useState<string | null>(null)
+  const [loading, setLoading]       = useState(true)
+  const [session, setSession]       = useState<Session | null>(null)
+  const [patientId, setPatientId]   = useState<number | null>(null)
+  const [orgId, setOrgId]           = useState<string | null>(null)
+  const [staffOrgId, setStaffOrgId] = useState<string | null>(null)
+  const [staffRole, setStaffRole]   = useState<string | null>(null)
 
-  async function resolveLink() {
+  async function resolveLink(currentSession: Session) {
+    // Patient account check (existing path)
     const { data } = await cr().from('patient_account').select('patient_id, org_id').maybeSingle()
     if (data) { setPatientId(data.patient_id); setOrgId(data.org_id) }
-    else { setPatientId(null); setOrgId(null) }
+    else      { setPatientId(null); setOrgId(null) }
+
+    // Staff check via server function (amendment 8).
+    // Uses mobile-staff-me.ts which queries saas.org_members with service role,
+    // avoiding uncertainty about whether the anon client can read saas schema.
+    try {
+      const res = await fetch('/api/mobile-staff-me', {
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
+      })
+      if (res.ok) {
+        const d: { isStaff: boolean; orgId: string | null; role: string | null } = await res.json()
+        setStaffOrgId(d.isStaff ? d.orgId : null)
+        setStaffRole(d.isStaff ? d.role : null)
+      } else {
+        setStaffOrgId(null)
+        setStaffRole(null)
+      }
+    } catch {
+      setStaffOrgId(null)
+      setStaffRole(null)
+    }
   }
 
   useEffect(() => {
@@ -40,13 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return
       setSession(data.session)
-      if (data.session) await resolveLink()
+      if (data.session) await resolveLink(data.session)
       setLoading(false)
     })
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
       setSession(s)
-      if (s) await resolveLink()
-      else { setPatientId(null); setOrgId(null) }
+      if (s) await resolveLink(s)
+      else { setPatientId(null); setOrgId(null); setStaffOrgId(null); setStaffRole(null) }
     })
     return () => { active = false; sub.subscription.unsubscribe() }
   }, [])
@@ -58,17 +83,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
-    return { needsConfirm: !data.session } // email confirmation may be required
+    return { needsConfirm: !data.session }
   }
   const signOut = async () => { await supabase.auth.signOut() }
   const redeemInvite = async (token: string) => {
     const { error } = await cr().rpc('redeem_patient_invite', { p_token: token.trim() })
     if (error) throw error
-    await resolveLink()
+    const s = (await supabase.auth.getSession()).data.session
+    if (s) await resolveLink(s)
   }
 
   return (
-    <AuthContext.Provider value={{ loading, session, patientId, orgId, signIn, signUp, signOut, redeemInvite }}>
+    <AuthContext.Provider value={{ loading, session, patientId, orgId, staffOrgId, staffRole, signIn, signUp, signOut, redeemInvite }}>
       {children}
     </AuthContext.Provider>
   )

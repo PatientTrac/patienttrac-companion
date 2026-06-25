@@ -30,6 +30,92 @@
   status = 200
   force = true
 
+# ── Companion Mobile Admin ────────────────────────────────────────────────────
+[[redirects]]
+  from = "/api/mobile-staff-me"
+  to = "/.netlify/functions/mobile-staff-me"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-config"
+  to = "/.netlify/functions/mobile-config"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-invites"
+  to = "/.netlify/functions/mobile-invites"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-invite-action"
+  to = "/.netlify/functions/mobile-invite-action"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-sessions"
+  to = "/.netlify/functions/mobile-sessions"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-session-action"
+  to = "/.netlify/functions/mobile-session-action"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-sync-monitor"
+  to = "/.netlify/functions/mobile-sync-monitor"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-patient-status"
+  to = "/.netlify/functions/mobile-patient-status"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-audit"
+  to = "/.netlify/functions/mobile-audit"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-patient-search"
+  to = "/.netlify/functions/mobile-patient-search"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/mobile-stats"
+  to = "/.netlify/functions/mobile-stats"
+  status = 200
+  force = true
+
+# ── Companion Mobile (mobile app endpoints) ───────────────────────────────────
+[[redirects]]
+  from = "/api/companion-pair"
+  to = "/.netlify/functions/companion-pair"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/companion-ingest"
+  to = "/.netlify/functions/companion-ingest"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/companion-refresh"
+  to = "/.netlify/functions/companion-refresh"
+  status = 200
+  force = true
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

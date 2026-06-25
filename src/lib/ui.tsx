@@ -19,6 +19,8 @@ export const ACCENTS: Record<string, { c: string; from: string; to: string }> = 
   messages:   { c: C.cyan,   from: '#00d4ff', to: '#34d399' },
   progress:   { c: C.gold,   from: '#c9a96e', to: '#00d4ff' },
   treatment:  { c: C.mint,   from: '#34d399', to: '#1f9e8f' },
+  'companion-mobile': { c: C.cyan, from: '#00d4ff', to: '#34d399' },
+  admin:      { c: C.gold,  from: '#c9a96e', to: '#e8cc9a' },
 }
 
 export function PMark({ size = 30 }: { size?: number }) {
@@ -68,6 +70,13 @@ export function Ico({ name, size = 22, color = 'currentColor', stroke = 1.7 }:
     shield: <path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z" />,
     x: <path d="M6 6l12 12M18 6 6 18" />,
     send: <path d="M4 12l16-7-7 16-2-7z" />,
+    mobile: <><rect x="5" y="2" width="14" height="20" rx="2" /><path d="M12 18h.01" /></>,
+    qr: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3zM17 17h3M14 20h3M20 14v3" /></>,
+    device: <><path d="M5 12a7 7 0 0 1 14 0M8 12a4 4 0 0 1 8 0M2 12a10 10 0 0 1 20 0" /><circle cx="12" cy="12" r="1" /></>,
+    copy: <><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>,
+    revoke: <><path d="M18 6 6 18M6 6l12 12" /><circle cx="12" cy="12" r="9" /></>,
+    filter: <path d="M4 6h16M7 12h10M10 18h4" />,
+    refresh: <path d="M23 4v6h-6M1 20v-6h6M3.5 9A9 9 0 0 1 20.5 9M20.5 15A9 9 0 0 1 3.5 15" />,
   }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}

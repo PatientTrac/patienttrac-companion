@@ -1,8 +1,9 @@
-import { NavLink, Routes, Route, Navigate } from 'react-router-dom'
+import { NavLink, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { C, PMark, Ico, Spinner, LanguageSwitcher, ACCENTS } from './lib/ui'
 import { Glow } from './lib/art'
 import { I18nProvider, useT } from './lib/i18n'
 import { AuthProvider, useAuth } from './lib/auth'
+import AdminShell from './lib/AdminShell'
 import Auth from './pages/Auth'
 import Today from './pages/Today'
 import Medications from './pages/Medications'
@@ -101,11 +102,30 @@ function Shell() {
   )
 }
 
+// Gate: routes /admin/* to AdminShell when staffOrgId is present (amendment 2).
+// Patient routes use the patient Shell.
+// Dual-role users (staff + patient) get the admin shell on /admin/* and
+// the patient shell on all other routes — no global default to admin.
 function Gate() {
-  const { loading, session, patientId } = useAuth()
+  const { loading, session, patientId, staffOrgId } = useAuth()
   const { t } = useT()
-  if (loading) return <div style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center' }}><Spinner label={t('common.loading')} /></div>
+  const location = useLocation()
+
+  if (loading) return (
+    <div style={{ minHeight: '100dvh', display: 'grid', placeItems: 'center' }}>
+      <Spinner label={t('common.loading')} />
+    </div>
+  )
   if (!session) return <Auth stage="auth" />
+
+  const isAdminRoute = location.pathname.startsWith('/admin')
+
+  if (isAdminRoute) {
+    if (!staffOrgId) return <Navigate to="/today" replace />
+    return <AdminShell />
+  }
+
+  // Patient shell
   if (patientId == null) return <Auth stage="invite" />
   return <Shell />
 }
