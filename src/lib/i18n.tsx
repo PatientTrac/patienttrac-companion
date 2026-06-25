@@ -79,6 +79,24 @@ const EN: Dict = {
   'tr.aiDisclaimer': "This assistant explains your plan for learning only. It can't diagnose, and it won't change your medications or doses — your care team makes those decisions.",
   'tr.q1': 'What does my recovery plan involve?', 'tr.q2': 'What warning signs should I watch for?', 'tr.q3': 'How long does recovery usually take?',
   'ai.fallback': "I can explain general, plan-based guidance, but I'm having trouble connecting right now. For anything specific to your situation, please reach out to your care team.",
+
+  'nav.selfchart': 'My health record',
+  'sc.title': 'My health record',
+  'sc.subtitle': 'Your care plan, medications, results, and learning — all in one place.',
+  'sc.carePlan': 'Care plan',
+  'sc.meds': 'My medications',
+  'sc.medsCore': 'Core regimen',
+  'sc.medsActive': 'All active medications',
+  'sc.medsEmpty': 'No active medications on file.',
+  'sc.labs': 'My results over time',
+  'sc.labsEmpty': 'No lab results on file yet.',
+  'sc.edu': 'Learn about my treatment',
+  'sc.eduEmpty': 'No learning entries yet.',
+  'sc.vitalsTitle': 'Device readings',
+  'sc.vitalsEmpty': 'No device readings yet. Device sync appears here when connected.',
+  'sc.autoTranslated': 'Auto-translated',
+  'sc.abnormal': 'Abnormal',
+  'sc.refRange': 'Ref:',
 }
 
 const ES: Dict = {
@@ -153,6 +171,24 @@ const ES: Dict = {
   'tr.aiDisclaimer': 'Este asistente explica tu plan solo con fines educativos. No puede diagnosticar ni cambiar tus medicamentos o dosis — esas decisiones las toma tu equipo de cuidado.',
   'tr.q1': '¿Qué incluye mi plan de recuperación?', 'tr.q2': '¿Qué señales de alerta debo vigilar?', 'tr.q3': '¿Cuánto suele durar la recuperación?',
   'ai.fallback': 'Puedo explicar orientación general basada en tu plan, pero tengo problemas para conectarme ahora. Para algo específico de tu situación, contacta a tu equipo de cuidado.',
+
+  'nav.selfchart': 'Mi expediente',
+  'sc.title': 'Mi expediente de salud',
+  'sc.subtitle': 'Tu plan de cuidado, medicamentos, resultados y aprendizaje — en un solo lugar.',
+  'sc.carePlan': 'Plan de cuidado',
+  'sc.meds': 'Mis medicamentos',
+  'sc.medsCore': 'Régimen principal',
+  'sc.medsActive': 'Todos los medicamentos activos',
+  'sc.medsEmpty': 'No hay medicamentos activos en tu expediente.',
+  'sc.labs': 'Mis resultados a lo largo del tiempo',
+  'sc.labsEmpty': 'Aún no hay resultados de laboratorio en tu expediente.',
+  'sc.edu': 'Aprende sobre mi tratamiento',
+  'sc.eduEmpty': 'Aún no hay entradas de aprendizaje.',
+  'sc.vitalsTitle': 'Lecturas de dispositivos',
+  'sc.vitalsEmpty': 'Aún no hay lecturas de dispositivos. La sincronización automática aparecerá aquí cuando estés conectado.',
+  'sc.autoTranslated': 'Traducción automática',
+  'sc.abnormal': 'Anormal',
+  'sc.refRange': 'Ref:',
 }
 
 const FR: Dict = {
@@ -227,6 +263,24 @@ const FR: Dict = {
   'tr.aiDisclaimer': "Cet assistant explique votre plan à titre éducatif uniquement. Il ne peut pas diagnostiquer ni modifier vos médicaments ou doses — ces décisions reviennent à votre équipe soignante.",
   'tr.q1': 'Que comprend mon plan de rétablissement ?', 'tr.q2': 'Quels signes d\'alerte surveiller ?', 'tr.q3': 'Combien de temps dure la guérison ?',
   'ai.fallback': "Je peux donner des explications générales basées sur votre plan, mais j'ai du mal à me connecter pour le moment. Pour quelque chose de spécifique, contactez votre équipe soignante.",
+
+  'nav.selfchart': 'Mon dossier',
+  'sc.title': 'Mon dossier de santé',
+  'sc.subtitle': 'Votre plan de soins, médicaments, résultats et apprentissage — en un seul endroit.',
+  'sc.carePlan': 'Plan de soins',
+  'sc.meds': 'Mes médicaments',
+  'sc.medsCore': 'Régime principal',
+  'sc.medsActive': 'Tous les médicaments actifs',
+  'sc.medsEmpty': 'Aucun médicament actif dans votre dossier.',
+  'sc.labs': 'Mes résultats dans le temps',
+  'sc.labsEmpty': 'Aucun résultat de laboratoire dans votre dossier.',
+  'sc.edu': 'En savoir plus sur mon traitement',
+  'sc.eduEmpty': "Aucune entrée d'apprentissage pour l'instant.",
+  'sc.vitalsTitle': 'Mesures des appareils',
+  'sc.vitalsEmpty': "Aucune mesure des appareils. La synchronisation automatique apparaîtra ici une fois connecté.",
+  'sc.autoTranslated': 'Traduction automatique',
+  'sc.abnormal': 'Anormal',
+  'sc.refRange': 'Réf :',
 }
 
 const DICTS: Record<Lang, Dict> = { en: EN, es: ES, fr: FR }

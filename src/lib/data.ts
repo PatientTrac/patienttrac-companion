@@ -1,4 +1,4 @@
-import { cr } from './supabase'
+import { cr, supabase } from './supabase'
 import type { Ctx } from './auth'
 
 const today0 = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString() }
@@ -108,6 +108,85 @@ export async function markStaffMessagesRead() {
   const { error } = await cr().from('companion_message')
     .update({ read_by_patient: true }).eq('sender_role', 'staff').eq('read_by_patient', false)
   if (error) throw error
+}
+
+// ── Self-chart: clinical read surfaces (Phase 4) ────────────
+export type SelfChartMed = {
+  id: number
+  name: string
+  dose: string | null
+  route: string | null
+  frequency: string | null
+  instructions: string | null
+  active: boolean
+  care_plan_id: number | null
+}
+export async function listSelfChartMeds(): Promise<SelfChartMed[]> {
+  const { data, error } = await cr()
+    .from('companion_medication')
+    .select('id,name,dose,route,frequency,instructions,active,care_plan_id')
+    .eq('active', true)
+    .order('id')
+  if (error) throw error
+  return (data ?? []) as SelfChartMed[]
+}
+
+export type LabResult = {
+  id: number
+  lab_name: string
+  test_code: string | null
+  result_value: string
+  result_unit: string | null
+  reference_range: string | null
+  is_abnormal: boolean
+  lab_date: string
+  result_date: string | null
+  notes: string | null
+}
+export async function listLabResults(): Promise<LabResult[]> {
+  const { data, error } = await cr()
+    .from('lab_results')
+    .select('id,lab_name,test_code,result_value,result_unit,reference_range,is_abnormal,lab_date,result_date,notes')
+    .order('lab_date', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as LabResult[]
+}
+
+export type EducationEntry = {
+  id: number
+  question: string
+  ai_answer: string
+  care_plan_id: number | null
+}
+export async function listEducationEntries(): Promise<EducationEntry[]> {
+  const { data, error } = await cr()
+    .from('companion_education')
+    .select('id,question,ai_answer,care_plan_id')
+    .order('id', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as EducationEntry[]
+}
+
+export type TranslateResult = {
+  translated_text: string
+  is_machine_translated: boolean
+  reviewed_by: string | null
+}
+export async function translateBlock(
+  sourceTable: string,
+  sourceId: number,
+  sourceColumn: string,
+  targetLang: 'es' | 'fr'
+): Promise<TranslateResult | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke('companion-translate', {
+      body: { source_table: sourceTable, source_id: String(sourceId), source_column: sourceColumn, target_lang: targetLang },
+    })
+    if (error || !data) return null
+    return data as TranslateResult
+  } catch {
+    return null
+  }
 }
 
 // ── Progress trends (patient's own data) ────────────────────

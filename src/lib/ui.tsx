@@ -21,6 +21,7 @@ export const ACCENTS: Record<string, { c: string; from: string; to: string }> = 
   treatment:  { c: C.mint,   from: '#34d399', to: '#1f9e8f' },
   'companion-mobile': { c: C.cyan, from: '#00d4ff', to: '#34d399' },
   admin:      { c: C.gold,  from: '#c9a96e', to: '#e8cc9a' },
+  selfchart:  { c: C.cyan,  from: '#00d4ff', to: '#c9a96e' },
 }
 
 export function PMark({ size = 30 }: { size?: number }) {
@@ -73,6 +74,7 @@ export function Ico({ name, size = 22, color = 'currentColor', stroke = 1.7 }:
     mobile: <><rect x="5" y="2" width="14" height="20" rx="2" /><path d="M12 18h.01" /></>,
     qr: <><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3zM17 17h3M14 20h3M20 14v3" /></>,
     device: <><path d="M5 12a7 7 0 0 1 14 0M8 12a4 4 0 0 1 8 0M2 12a10 10 0 0 1 20 0" /><circle cx="12" cy="12" r="1" /></>,
+    flask: <path d="M9 3h6M9 3v5.5L5 15a2 2 0 0 0 1.76 3h10.48A2 2 0 0 0 19 15l-4-6.5V3" />,
     copy: <><rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>,
     revoke: <><path d="M18 6 6 18M6 6l12 12" /><circle cx="12" cy="12" r="9" /></>,
     filter: <path d="M4 6h16M7 12h10M10 18h4" />,
