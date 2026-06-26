@@ -6,94 +6,14 @@ import type { Lang } from '../lib/i18n'
 import {
   getActivePlan,
   listSelfChartMeds,
-  listLabResults,
   listEducationEntries,
   listVitals,
   translateBlock,
 } from '../lib/data'
 import type { SelfChartMed, TranslateResult } from '../lib/data'
-
-// ── Lab analyte group classification ─────────────────────────────────────────
-
-function classifyLab(name: string): 'cea' | 'cbc' | 'lft' | 'other' {
-  const n = name.toLowerCase()
-  if (n.includes('cea') || n.includes('carcinoembryonic')) return 'cea'
-  if (
-    n.includes('hemoglobin') || n.includes('haemoglobin') || n === 'hgb' ||
-    n.includes('hematocrit') || n.includes('haematocrit') || n === 'hct' ||
-    n.includes('wbc') || n.includes('white blood') || n.includes('leukocyte') ||
-    n.includes('platelet') || n === 'plt' ||
-    n.includes('neutrophil') || n.includes('lymphocyte') || n.includes('rbc')
-  ) return 'cbc'
-  if (
-    n === 'alt' || n.includes('alanine') || n.includes('sgpt') ||
-    n === 'ast' || n.includes('aspartate') || n.includes('sgot') ||
-    n === 'alp' || n.includes('alkaline phosphatase') ||
-    n.includes('bilirubin') || n.includes('ggt') || n.includes('albumin')
-  ) return 'lft'
-  return 'other'
-}
-
-const LAB_GROUP_ORDER: Record<string, number> = { cea: 0, cbc: 1, lft: 2, other: 3 }
-const LAB_GROUP_COLOR: Record<string, string> = {
-  cea: C.gold, cbc: C.mint, lft: C.violet, other: C.cyan,
-}
-
-// ── Inline lab trend chart ────────────────────────────────────────────────────
-
-interface LabPoint { date: string; value: number; abnormal: boolean; unit: string }
-
-function LabTrend({ series }: { series: LabPoint[] }) {
-  if (series.length === 0) return null
-  const w = 320, h = 76, pad = 14
-  const vals = series.map(s => s.value)
-  const mn = Math.min(...vals), mx = Math.max(...vals)
-  const span = (mx - mn) || 1
-  const n = series.length
-  const pts = series.map((s, i) => ({
-    x: n === 1 ? w / 2 : pad + (i / (n - 1)) * (w - 2 * pad),
-    y: h - pad - ((s.value - mn) / span) * (h - 2 * pad),
-    ...s,
-  }))
-  const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height={h} style={{ display: 'block', overflow: 'visible' }}>
-      <path d={pathD} fill="none" stroke={C.cyan} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-      {pts.map((p, i) => (
-        <g key={i}>
-          {p.abnormal && (
-            <circle cx={p.x} cy={p.y} r={8} fill="none" stroke={C.red} strokeWidth={1.5} opacity={0.45} />
-          )}
-          <circle cx={p.x} cy={p.y} r={p.abnormal ? 4.5 : 3} fill={p.abnormal ? C.red : C.cyan} />
-          <title>{`${p.date}: ${p.value} ${p.unit}${p.abnormal ? ' — abnormal' : ''}`}</title>
-        </g>
-      ))}
-    </svg>
-  )
-}
-
-function DateAxis({ dates }: { dates: string[] }) {
-  if (dates.length === 0) return null
-  const fmt = (d: string) => {
-    const dt = new Date(d + 'T12:00:00Z')
-    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-      <span style={{ fontSize: 10, color: C.subtle, fontFamily: 'DM Mono,monospace' }}>{fmt(dates[0])}</span>
-      {dates.length > 2 && (
-        <span style={{ fontSize: 10, color: C.subtle, fontFamily: 'DM Mono,monospace' }}>
-          {dates.length} draws
-        </span>
-      )}
-      {dates.length > 1 && (
-        <span style={{ fontSize: 10, color: C.subtle, fontFamily: 'DM Mono,monospace' }}>
-          {fmt(dates[dates.length - 1])}
-        </span>
-      )}
-    </div>
-  )
-}
+import { LabsPanel, ClinicalViewerProvider } from '@patienttrac/clinical-viewer'
+import { useAuth } from '../lib/auth'
+import { supabase } from '../lib/supabase'
 
 // ── Translation wrapper ───────────────────────────────────────────────────────
 // Shows English immediately; swaps to translated text for ES/FR once resolved.
@@ -166,34 +86,14 @@ const isCoreChemo = (name: string) => CORE_CHEMO.some(k => name.toLowerCase().in
 
 export default function SelfChart() {
   const { t } = useT()
+  const { patientId } = useAuth()
   const A = ACCENTS.selfchart
   const [openEdu, setOpenEdu] = useState<number | null>(null)
 
   const { data: plan,   loading: planLoading   } = useAsync(() => getActivePlan(), [])
   const { data: meds,   loading: medsLoading   } = useAsync(() => listSelfChartMeds(), [])
-  const { data: labs,   loading: labsLoading   } = useAsync(() => listLabResults(), [])
   const { data: edu,    loading: eduLoading    } = useAsync(() => listEducationEntries(), [])
   const { data: vitals, loading: vitalsLoading } = useAsync(() => listVitals(), [])
-
-  // Group lab results by analyte, parse numeric values
-  const labByAnalyte = new Map<string, { name: string; unit: string; series: LabPoint[]; refRange: string | null }>()
-  for (const r of (labs ?? [])) {
-    const v = parseFloat(r.result_value)
-    if (isNaN(v)) continue
-    const pt: LabPoint = { date: r.lab_date, value: v, abnormal: r.is_abnormal, unit: r.result_unit ?? '' }
-    const existing = labByAnalyte.get(r.lab_name)
-    if (existing) {
-      existing.series.push(pt)
-    } else {
-      labByAnalyte.set(r.lab_name, { name: r.lab_name, unit: r.result_unit ?? '', series: [pt], refRange: r.reference_range })
-    }
-  }
-  const analytes = Array.from(labByAnalyte.values())
-    .map(a => ({ ...a, series: [...a.series].sort((x, y) => x.date.localeCompare(y.date)) }))
-    .sort((a, b) => {
-      const diff = (LAB_GROUP_ORDER[classifyLab(a.name)] ?? 3) - (LAB_GROUP_ORDER[classifyLab(b.name)] ?? 3)
-      return diff !== 0 ? diff : a.name.localeCompare(b.name)
-    })
 
   const coreMeds = (meds ?? []).filter(m => isCoreChemo(m.name))
   const otherMeds = (meds ?? []).filter(m => !isCoreChemo(m.name))
@@ -273,56 +173,11 @@ export default function SelfChart() {
         </div>
       )}
 
-      {/* ── Lab results ────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 13, marginTop: 4 }}>
-        <Ico name="flask" size={16} color={C.cyan} />
-        <span style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 18, color: C.text }}>
-          {t('sc.labs')}
-        </span>
-      </div>
-      {labsLoading && <Spinner label={t('common.loading')} />}
-      {!labsLoading && analytes.length === 0 && (
-        <Card style={{ marginBottom: 22 }}>
-          <p style={{ color: C.subtle, fontSize: 14, margin: 0 }}>{t('sc.labsEmpty')}</p>
-        </Card>
-      )}
-      {!labsLoading && analytes.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 14, marginBottom: 22 }}>
-          {analytes.map(analyte => {
-            const latest = analyte.series[analyte.series.length - 1]
-            const group = classifyLab(analyte.name)
-            const gc = LAB_GROUP_COLOR[group]
-            return (
-              <Card key={analyte.name} accent={gc} style={{ padding: 18 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 15, color: C.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {analyte.name}
-                    </div>
-                    <div style={{ fontSize: 10.5, color: C.subtle, fontFamily: 'DM Mono,monospace', marginTop: 2 }}>
-                      {analyte.unit}
-                      {analyte.refRange && (
-                        <span style={{ marginLeft: 6 }}>{t('sc.refRange')} {analyte.refRange}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', marginLeft: 10, flexShrink: 0 }}>
-                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 22, color: latest?.abnormal ? C.red : gc, lineHeight: 1 }}>
-                      {latest?.value}
-                    </div>
-                    {latest?.abnormal && (
-                      <div style={{ fontSize: 10.5, color: C.red, fontFamily: 'DM Mono,monospace', marginTop: 2 }}>
-                        ⚠ {t('sc.abnormal')}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <LabTrend series={analyte.series} />
-                <DateAxis dates={analyte.series.map(s => s.date)} />
-              </Card>
-            )
-          })}
-        </div>
+      {/* ── Lab results (LabsPanel from @patienttrac/clinical-viewer) ─── */}
+      {patientId != null && (
+        <ClinicalViewerProvider client={supabase}>
+          <LabsPanel patientId={patientId} />
+        </ClinicalViewerProvider>
       )}
 
       {/* ── Education accordion ────────────────────────────────────────────── */}
