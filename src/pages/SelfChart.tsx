@@ -12,11 +12,8 @@ import {
 } from '../lib/data'
 import type { SelfChartMed, TranslateResult } from '../lib/data'
 import { LabsPanel, ClinicalViewerProvider } from '@patienttrac/clinical-viewer'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useAuth } from '../lib/auth'
 import { supabase } from '../lib/supabase'
-
-const labsQueryClient = new QueryClient()
 
 // ── Translation wrapper ───────────────────────────────────────────────────────
 // Shows English immediately; swaps to translated text for ES/FR once resolved.
@@ -178,11 +175,9 @@ export default function SelfChart() {
 
       {/* ── Lab results (LabsPanel from @patienttrac/clinical-viewer) ─── */}
       {patientId != null && (
-        <QueryClientProvider client={labsQueryClient}>
-          <ClinicalViewerProvider client={supabase}>
-            <LabsPanel patientId={patientId} />
-          </ClinicalViewerProvider>
-        </QueryClientProvider>
+        <ClinicalViewerProvider client={supabase}>
+          <LabsPanel patientId={patientId} />
+        </ClinicalViewerProvider>
       )}
 
       {/* ── Education accordion ────────────────────────────────────────────── */}
