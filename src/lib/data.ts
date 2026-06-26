@@ -131,26 +131,6 @@ export async function listSelfChartMeds(): Promise<SelfChartMed[]> {
   return (data ?? []) as SelfChartMed[]
 }
 
-export type LabResult = {
-  id: number
-  lab_name: string
-  test_code: string | null
-  result_value: string
-  result_unit: string | null
-  reference_range: string | null
-  is_abnormal: boolean
-  lab_date: string
-  result_date: string | null
-  notes: string | null
-}
-export async function listLabResults(): Promise<LabResult[]> {
-  const { data, error } = await cr()
-    .from('lab_results')
-    .select('id,lab_name,test_code,result_value,result_unit,reference_range,is_abnormal,lab_date,result_date,notes')
-    .order('lab_date', { ascending: true })
-  if (error) throw error
-  return (data ?? []) as LabResult[]
-}
 
 export type EducationEntry = {
   id: number
