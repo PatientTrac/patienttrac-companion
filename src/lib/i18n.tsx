@@ -116,6 +116,8 @@ const EN: Dict = {
   'bill.st.pending': 'Pending', 'bill.st.processing': 'Processing', 'bill.st.extracted': 'Extracted', 'bill.st.needs_review': 'Needs review', 'bill.st.committed': 'Posted', 'bill.st.failed': 'Failed',
   'bill.coinsurance': 'Co-insurance',
   'bill.postBtn': 'Post to billing', 'bill.posting': 'Posting…', 'bill.uploadExtracted': 'Read successfully — review and post it below.',
+  'bill.edit': 'Edit', 'bill.void': 'Remove', 'bill.voidReason': 'Why are you removing this?',
+  'bill.voidReasonRequired': 'Please give a reason.', 'bill.save': 'Save', 'bill.cancel': 'Cancel',
 }
 
 const ES: Dict = {
@@ -227,6 +229,8 @@ const ES: Dict = {
   'bill.st.pending': 'Pendiente', 'bill.st.processing': 'Procesando', 'bill.st.extracted': 'Extraído', 'bill.st.needs_review': 'Por revisar', 'bill.st.committed': 'Registrado', 'bill.st.failed': 'Falló',
   'bill.coinsurance': 'Coaseguro',
   'bill.postBtn': 'Registrar en facturación', 'bill.posting': 'Registrando…', 'bill.uploadExtracted': 'Leído correctamente — revíselo y regístrelo abajo.',
+  'bill.edit': 'Editar', 'bill.void': 'Quitar', 'bill.voidReason': '¿Por qué lo quita?',
+  'bill.voidReasonRequired': 'Indique un motivo.', 'bill.save': 'Guardar', 'bill.cancel': 'Cancelar',
 }
 
 const FR: Dict = {
@@ -338,6 +342,8 @@ const FR: Dict = {
   'bill.st.pending': 'En attente', 'bill.st.processing': 'En cours', 'bill.st.extracted': 'Extrait', 'bill.st.needs_review': 'À vérifier', 'bill.st.committed': 'Enregistré', 'bill.st.failed': 'Échec',
   'bill.coinsurance': 'Coassurance',
   'bill.postBtn': 'Enregistrer en facturation', 'bill.posting': 'Enregistrement…', 'bill.uploadExtracted': 'Lu correctement — vérifiez et enregistrez ci-dessous.',
+  'bill.edit': 'Modifier', 'bill.void': 'Retirer', 'bill.voidReason': 'Pourquoi le retirer ?',
+  'bill.voidReasonRequired': 'Veuillez indiquer un motif.', 'bill.save': 'Enregistrer', 'bill.cancel': 'Annuler',
 }
 
 const DICTS: Record<Lang, Dict> = { en: EN, es: ES, fr: FR }

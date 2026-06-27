@@ -10,7 +10,7 @@ export type BillingDocUpload = {
   mime_type: string | null
   file_size_bytes: number | null
   uploaded_at: string
-  extraction_status: 'pending' | 'processing' | 'extracted' | 'needs_review' | 'committed' | 'failed'
+  extraction_status: 'pending' | 'processing' | 'extracted' | 'needs_review' | 'committed' | 'voided' | 'failed'
   extracted: {
     kind?: string; provider_or_payer?: string | null; invoice_number?: string | null;
     service_date?: string | null; currency?: string | null; total_amount?: number | null;
@@ -59,4 +59,18 @@ export async function commitUpload(uploadId: string): Promise<string> {
   const { data, error } = await cr().rpc('companion_commit_billing_upload', { p_upload_id: uploadId })
   if (error) throw error
   return data as string
+}
+
+export async function voidUpload(uploadId: string, reason: string): Promise<string> {
+  const { data, error } = await cr().rpc('companion_void_billing_upload', { p_upload_id: uploadId, p_reason: reason })
+  if (error) throw error
+  return data as string
+}
+
+// patch keys: kind, provider_or_payer, invoice_number, service_date, currency,
+// total_amount, patient_paid, insurance_paid, payment_method, reference_number, description
+export async function updateExtraction(uploadId: string, patch: Record<string, unknown>): Promise<{ status: string; extracted: any }> {
+  const { data, error } = await cr().rpc('companion_update_billing_extraction', { p_upload_id: uploadId, p_patch: patch })
+  if (error) throw error
+  return data as { status: string; extracted: any }
 }

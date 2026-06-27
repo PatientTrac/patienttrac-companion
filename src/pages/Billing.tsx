@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { C, Card, Ico, Spinner, SectionHeader, GradientStat, ACCENTS, useAsync } from '../lib/ui'
 import { useT } from '../lib/i18n'
 import { loadBilling, type BillingSummary, type Invoice, type Payment, type Reimbursement, type Coverage } from '../lib/billing'
-import { uploadBillingDoc, listUploads, commitUpload, DOC_TYPES, type DocType, type BillingDocUpload } from '../lib/billingUpload'
+import { uploadBillingDoc, listUploads, commitUpload, voidUpload, updateExtraction, DOC_TYPES, type DocType, type BillingDocUpload } from '../lib/billingUpload'
 
 const money = (n: number | null | undefined, currency = 'USD') =>
   n == null ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: currency === 'COP' ? 0 : 2 }).format(n)
@@ -74,35 +74,151 @@ function UploadPanel({ accent, onDone }: { accent: string; onDone: () => void })
   )
 }
 
+const EDIT_KINDS = ['invoice', 'receipt', 'receipt_and_invoice', 'insurance_eob', 'unknown']
+const EDIT_CURRENCIES = ['USD', 'COP', 'EUR']
+
 function UploadsList({ items, onChange }: { items: BillingDocUpload[]; onChange: () => void }) {
   const { t } = useT()
   const [busy, setBusy] = useState<string | null>(null)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<Record<string, any>>({})
+  const [voidId, setVoidId] = useState<string | null>(null)
+  const [voidReason, setVoidReason] = useState('')
+  const [voidError, setVoidError] = useState(false)
+
+  const field = (k: string, v: any) => setEditForm(f => ({ ...f, [k]: v }))
+  const isBusy = (id: string) => busy === id
+
   if (!items.length) return <Card><p style={{ color: C.subtle, fontSize: 14, margin: 0 }}>{t('bill.noDocs')}</p></Card>
+
+  const inputStyle = { background: C.navy900, border: `1px solid ${C.subtle}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '7px 10px', width: '100%' }
+
   return (
     <Card style={{ padding: 0, overflow: 'hidden' }}>
       {items.map((u, i) => {
         const ex = u.extracted || {}
         const amt = ex.total_amount ?? ex.insurance_paid ?? ex.patient_paid
+        const uncommitted = u.extraction_status !== 'committed'
+        const isEditing = editId === u.upload_id
+        const isVoiding = voidId === u.upload_id
+
         return (
-          <div key={u.upload_id} style={{ padding: '13px 20px', borderTop: i ? `1px solid ${C.navy700}55` : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
-                <Pill label={t('docType.' + u.doc_type)} color={C.cyan} />
-                <Pill label={t('bill.st.' + u.extraction_status)} color={statusColor(u.extraction_status)} />
+          <div key={u.upload_id} style={{ borderTop: i ? `1px solid ${C.navy700}55` : 'none' }}>
+            <div style={{ padding: '13px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
+                  <Pill label={t('docType.' + u.doc_type)} color={C.cyan} />
+                  <Pill label={t('bill.st.' + u.extraction_status)} color={statusColor(u.extraction_status)} />
+                </div>
+                <div style={{ fontSize: 13, color: C.text, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}>{u.file_name}</div>
+                <div style={{ fontSize: 12, color: C.subtle }}>{[ex.provider_or_payer, ex.invoice_number, fmtDate(u.uploaded_at)].filter(Boolean).join(' · ')}</div>
               </div>
-              <div style={{ fontSize: 13, color: C.text, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}>{u.file_name}</div>
-              <div style={{ fontSize: 12, color: C.subtle }}>{[ex.provider_or_payer, ex.invoice_number, fmtDate(u.uploaded_at)].filter(Boolean).join(' · ')}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {amt != null && !isEditing && (
+                  <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16, color: C.text }}>{money(amt, ex.currency || 'USD')}</div>
+                )}
+                {u.extraction_status === 'extracted' && !isEditing && !isVoiding && (
+                  <button disabled={isBusy(u.upload_id)}
+                    onClick={async () => { setBusy(u.upload_id); try { await commitUpload(u.upload_id); onChange() } finally { setBusy(null) } }}
+                    style={{ fontSize: 12.5, fontWeight: 700, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', color: C.navy900, background: C.green, border: 'none' }}>
+                    {isBusy(u.upload_id) ? t('bill.posting') : t('bill.postBtn')}
+                  </button>
+                )}
+                {uncommitted && !isEditing && !isVoiding && (
+                  <>
+                    <button disabled={isBusy(u.upload_id)}
+                      onClick={() => { setVoidId(null); setEditId(u.upload_id); setEditForm({ kind: ex.kind || '', provider_or_payer: ex.provider_or_payer || '', total_amount: ex.total_amount ?? '', currency: ex.currency || 'USD', service_date: ex.service_date || '' }) }}
+                      style={{ fontSize: 12.5, fontWeight: 600, padding: '5px 11px', borderRadius: 8, cursor: 'pointer', color: C.muted, background: 'transparent', border: `1px solid ${C.subtle}` }}>
+                      {t('bill.edit')}
+                    </button>
+                    <button disabled={isBusy(u.upload_id)}
+                      onClick={() => { setEditId(null); setVoidId(u.upload_id); setVoidReason(''); setVoidError(false) }}
+                      style={{ fontSize: 12.5, fontWeight: 600, padding: '5px 11px', borderRadius: 8, cursor: 'pointer', color: C.red, background: 'transparent', border: `1px solid ${C.red}55` }}>
+                      {t('bill.void')}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-              {amt != null && <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16, color: C.text }}>{money(amt, ex.currency || 'USD')}</div>}
-              {u.extraction_status === 'extracted' && (
-                <button disabled={busy === u.upload_id}
-                  onClick={async () => { setBusy(u.upload_id); try { await commitUpload(u.upload_id); onChange() } finally { setBusy(null) } }}
-                  style={{ fontSize: 12.5, fontWeight: 700, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', color: C.navy900, background: C.green, border: 'none' }}>
-                  {busy === u.upload_id ? t('bill.posting') : t('bill.postBtn')}
-                </button>
-              )}
-            </div>
+
+            {isEditing && (
+              <div style={{ padding: '0 20px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <label style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 11.5, color: C.muted }}>Kind</span>
+                  <select value={editForm.kind} onChange={e => field('kind', e.target.value)} style={inputStyle as any}>
+                    {EDIT_KINDS.map(k => <option key={k} value={k}>{k}</option>)}
+                  </select>
+                </label>
+                <label style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 11.5, color: C.muted }}>Provider / payer</span>
+                  <input value={editForm.provider_or_payer} onChange={e => field('provider_or_payer', e.target.value)} style={inputStyle} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 11.5, color: C.muted }}>Amount</span>
+                  <input type="number" value={editForm.total_amount} onChange={e => field('total_amount', e.target.value)} style={inputStyle} />
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 11.5, color: C.muted }}>Currency</span>
+                  <select value={editForm.currency} onChange={e => field('currency', e.target.value)} style={inputStyle as any}>
+                    {EDIT_CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </label>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 11.5, color: C.muted }}>Service date</span>
+                  <input type="date" value={editForm.service_date} onChange={e => field('service_date', e.target.value)} style={inputStyle} />
+                </label>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                  <button disabled={isBusy(u.upload_id)}
+                    onClick={async () => {
+                      setBusy(u.upload_id)
+                      try {
+                        const patch: Record<string, unknown> = {}
+                        if (editForm.kind) patch.kind = editForm.kind
+                        if (editForm.provider_or_payer !== '') patch.provider_or_payer = editForm.provider_or_payer
+                        if (editForm.total_amount !== '') patch.total_amount = Number(editForm.total_amount)
+                        if (editForm.currency) patch.currency = editForm.currency
+                        if (editForm.service_date) patch.service_date = editForm.service_date
+                        await updateExtraction(u.upload_id, patch)
+                        setEditId(null)
+                        onChange()
+                      } finally { setBusy(null) }
+                    }}
+                    style={{ fontSize: 12.5, fontWeight: 700, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', color: C.navy900, background: C.mint, border: 'none' }}>
+                    {t('bill.save')}
+                  </button>
+                  <button onClick={() => setEditId(null)}
+                    style={{ fontSize: 12.5, fontWeight: 600, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', color: C.muted, background: 'transparent', border: `1px solid ${C.subtle}` }}>
+                    {t('bill.cancel')}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {isVoiding && (
+              <div style={{ padding: '0 20px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <span style={{ fontSize: 12, color: C.muted }}>{t('bill.voidReason')}</span>
+                  <input value={voidReason} onChange={e => { setVoidReason(e.target.value); setVoidError(false) }}
+                    style={{ ...inputStyle, border: `1px solid ${voidError ? C.red : C.subtle}` }} />
+                  {voidError && <span style={{ fontSize: 11.5, color: C.red }}>{t('bill.voidReasonRequired')}</span>}
+                </label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button disabled={isBusy(u.upload_id)}
+                    onClick={async () => {
+                      if (!voidReason.trim()) { setVoidError(true); return }
+                      setBusy(u.upload_id)
+                      try { await voidUpload(u.upload_id, voidReason.trim()); setVoidId(null); onChange() } finally { setBusy(null) }
+                    }}
+                    style={{ fontSize: 12.5, fontWeight: 700, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', color: '#fff', background: C.red, border: 'none' }}>
+                    {isBusy(u.upload_id) ? '…' : t('bill.void')}
+                  </button>
+                  <button onClick={() => setVoidId(null)}
+                    style={{ fontSize: 12.5, fontWeight: 600, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', color: C.muted, background: 'transparent', border: `1px solid ${C.subtle}` }}>
+                    {t('bill.cancel')}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )
       })}
