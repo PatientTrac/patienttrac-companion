@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { C, Card, Ico, Spinner, SectionHeader, GradientStat, ACCENTS, useAsync } from '../lib/ui'
 import { useT } from '../lib/i18n'
 import { loadBilling, type BillingSummary, type Invoice, type Payment, type Reimbursement, type Coverage } from '../lib/billing'
-import { uploadBillingDoc, listUploads, DOC_TYPES, type DocType, type BillingDocUpload } from '../lib/billingUpload'
+import { uploadBillingDoc, listUploads, commitUpload, DOC_TYPES, type DocType, type BillingDocUpload } from '../lib/billingUpload'
 
 const money = (n: number | null | undefined, currency = 'USD') =>
   n == null ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: currency === 'COP' ? 0 : 2 }).format(n)
@@ -40,7 +40,7 @@ function UploadPanel({ accent, onDone }: { accent: string; onDone: () => void })
     setBusy(true); setMsg(null)
     try {
       const { status } = await uploadBillingDoc(file, docType)
-      setMsg(t(status === 'committed' ? 'bill.uploadOk' : 'bill.uploadReview'))
+      setMsg(t(status === 'extracted' ? 'bill.uploadExtracted' : 'bill.uploadReview'))
       onDone()
     } catch (err: any) {
       setMsg(err?.message || 'Upload failed')
@@ -74,8 +74,9 @@ function UploadPanel({ accent, onDone }: { accent: string; onDone: () => void })
   )
 }
 
-function UploadsList({ items }: { items: BillingDocUpload[] }) {
+function UploadsList({ items, onChange }: { items: BillingDocUpload[]; onChange: () => void }) {
   const { t } = useT()
+  const [busy, setBusy] = useState<string | null>(null)
   if (!items.length) return <Card><p style={{ color: C.subtle, fontSize: 14, margin: 0 }}>{t('bill.noDocs')}</p></Card>
   return (
     <Card style={{ padding: 0, overflow: 'hidden' }}>
@@ -92,7 +93,16 @@ function UploadsList({ items }: { items: BillingDocUpload[] }) {
               <div style={{ fontSize: 13, color: C.text, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 220 }}>{u.file_name}</div>
               <div style={{ fontSize: 12, color: C.subtle }}>{[ex.provider_or_payer, ex.invoice_number, fmtDate(u.uploaded_at)].filter(Boolean).join(' · ')}</div>
             </div>
-            {amt != null && <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16, color: C.text, flexShrink: 0 }}>{money(amt, ex.currency || 'USD')}</div>}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              {amt != null && <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16, color: C.text }}>{money(amt, ex.currency || 'USD')}</div>}
+              {u.extraction_status === 'extracted' && (
+                <button disabled={busy === u.upload_id}
+                  onClick={async () => { setBusy(u.upload_id); try { await commitUpload(u.upload_id); onChange() } finally { setBusy(null) } }}
+                  style={{ fontSize: 12.5, fontWeight: 700, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', color: C.navy900, background: C.green, border: 'none' }}>
+                  {busy === u.upload_id ? t('bill.posting') : t('bill.postBtn')}
+                </button>
+              )}
+            </div>
           </div>
         )
       })}
@@ -132,6 +142,7 @@ function CoverageCard({ cov, accent }: { cov: Coverage; accent: string }) {
       </div>
       <Row label={t('bill.copay')} value={cov.copay_amount != null ? money(cov.copay_amount) : t('bill.noCopay')} />
       <Row label={t('bill.deductible')} value={money(cov.deductible_amount)} />
+      {cov.coinsurance_pct != null && <Row label={t('bill.coinsurance')} value={`${cov.coinsurance_pct}%`} />}
       {cov.visit_limit != null && <Row label={t('bill.visits')} value={`${cov.visits_used ?? 0} / ${cov.visit_limit}`} />}
       {cov.out_of_pocket_max != null && (
         <div style={{ paddingTop: 10 }}>
@@ -246,7 +257,7 @@ export default function Billing() {
           <ReimbursementList items={data.reimbursements} />
 
           <SubHead>{t('bill.documents')}</SubHead>
-          <UploadsList items={uploads.data ?? []} />
+          <UploadsList items={uploads.data ?? []} onChange={bump} />
 
           <p style={{ fontSize: 12.5, color: C.subtle, marginTop: 18, lineHeight: 1.6 }}>{t('bill.disclaimer')}</p>
         </>

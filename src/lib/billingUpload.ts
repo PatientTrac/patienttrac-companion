@@ -54,3 +54,9 @@ export async function uploadBillingDoc(file: File, docType: DocType): Promise<{ 
   const out = await res.json().catch(() => ({} as any))
   return { upload_id: uploadId as string, status: out?.status || 'pending' }
 }
+
+export async function commitUpload(uploadId: string): Promise<string> {
+  const { data, error } = await cr().rpc('companion_commit_billing_upload', { p_upload_id: uploadId })
+  if (error) throw error
+  return data as string
+}

@@ -65,6 +65,7 @@ export type Coverage = {
   is_primary: boolean
   copay_amount: number | null
   deductible_amount: number | null
+  coinsurance_pct: number | null
   out_of_pocket_max: number | null
   out_of_pocket_met: number | null
   visit_limit: number | null

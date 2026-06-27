@@ -89,48 +89,13 @@ export const handler = async (event: { httpMethod: string; body: string | null; 
     let ex: any
     try { ex = JSON.parse(raw) } catch { throw new Error('model did not return JSON') }
 
+    // Extract only — DO NOT post billing rows here. Posting happens on patient
+    // confirmation via cr.companion_commit_billing_upload (review gate).
     const confident = typeof ex.total_amount === 'number' && (ex.confidence ?? 0) >= 0.6 && ex.kind !== 'unknown'
-
-    // Idempotency: only post once per upload
-    const { count } = await admin.schema('cr').from('patient_invoice')
-      .select('invoice_id', { count: 'exact', head: true }).eq('source_upload_id', upload_id)
-    const already = (count ?? 0) > 0
-
-    if (confident && !already) {
-      const base = { patient_id: up.patient_id, org_id: up.org_id, source_upload_id: upload_id }
-      if (ex.kind === 'invoice' || ex.kind === 'receipt_and_invoice') {
-        await admin.schema('cr').from('patient_invoice').insert({
-          ...base, invoice_number: ex.invoice_number, invoice_date: ex.service_date, currency: ex.currency || 'USD',
-          total_charges: ex.total_amount, amount_paid: ex.patient_paid ?? 0,
-          balance_due: Math.max(0, (ex.total_amount ?? 0) - (ex.patient_paid ?? 0)),
-          amount_due: Math.max(0, (ex.total_amount ?? 0) - (ex.patient_paid ?? 0)),
-          status: (ex.patient_paid ?? 0) >= (ex.total_amount ?? 0) ? 'paid' : 'open',
-          notes: ex.provider_or_payer ? `${ex.provider_or_payer}${ex.description ? ' — ' + ex.description : ''}` : ex.description,
-        })
-      }
-      if (ex.kind === 'receipt' || ex.kind === 'receipt_and_invoice') {
-        await admin.schema('cr').from('patient_payments').insert({
-          ...base, payment_date: ex.service_date, payment_amount: ex.patient_paid ?? ex.total_amount,
-          currency: ex.currency || 'USD', payment_method: ex.payment_method, reference_number: ex.reference_number,
-          notes: ex.provider_or_payer || ex.description,
-        })
-      }
-      if (ex.kind === 'insurance_eob' && typeof ex.insurance_paid === 'number') {
-        await admin.schema('cr').from('era_payments').insert({
-          ...base, payer_name: ex.provider_or_payer || 'Insurer', payer_id: ex.invoice_number,
-          check_date: ex.service_date, total_payment: ex.insurance_paid,
-          currency: ex.insurance_currency || ex.currency || 'USD', status: 'paid',
-          posted_at: new Date().toISOString(), payment_method: ex.payment_method,
-        })
-      }
-    }
-
-    const status = already ? 'committed' : confident ? 'committed' : 'needs_review'
+    const status = confident ? 'extracted' : 'needs_review'
     await admin.schema('cr').from('companion_billing_upload').update({
-      extracted: ex, extraction_status: status, extracted_at: new Date().toISOString(),
-      committed_at: status === 'committed' ? new Date().toISOString() : null, updated_at: new Date().toISOString(),
+      extracted: ex, extraction_status: status, extracted_at: new Date().toISOString(), updated_at: new Date().toISOString(),
     }).eq('upload_id', upload_id)
-
     return json({ status, extracted: ex })
   } catch (e: any) {
     await admin.schema('cr').from('companion_billing_upload').update({

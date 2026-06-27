@@ -114,6 +114,8 @@ const EN: Dict = {
   'bill.documents': 'Uploaded documents', 'bill.noDocs': 'No documents uploaded yet.',
   'docType.physicians': 'Physicians', 'docType.laboratory': 'Laboratory', 'docType.radiology': 'Radiology', 'docType.medications': 'Medications', 'docType.other': 'Other',
   'bill.st.pending': 'Pending', 'bill.st.processing': 'Processing', 'bill.st.extracted': 'Extracted', 'bill.st.needs_review': 'Needs review', 'bill.st.committed': 'Posted', 'bill.st.failed': 'Failed',
+  'bill.coinsurance': 'Co-insurance',
+  'bill.postBtn': 'Post to billing', 'bill.posting': 'Posting…', 'bill.uploadExtracted': 'Read successfully — review and post it below.',
 }
 
 const ES: Dict = {
@@ -223,6 +225,8 @@ const ES: Dict = {
   'bill.documents': 'Documentos subidos', 'bill.noDocs': 'Aún no hay documentos subidos.',
   'docType.physicians': 'Médicos', 'docType.laboratory': 'Laboratorio', 'docType.radiology': 'Radiología', 'docType.medications': 'Medicamentos', 'docType.other': 'Otro',
   'bill.st.pending': 'Pendiente', 'bill.st.processing': 'Procesando', 'bill.st.extracted': 'Extraído', 'bill.st.needs_review': 'Por revisar', 'bill.st.committed': 'Registrado', 'bill.st.failed': 'Falló',
+  'bill.coinsurance': 'Coaseguro',
+  'bill.postBtn': 'Registrar en facturación', 'bill.posting': 'Registrando…', 'bill.uploadExtracted': 'Leído correctamente — revíselo y regístrelo abajo.',
 }
 
 const FR: Dict = {
@@ -332,6 +336,8 @@ const FR: Dict = {
   'bill.documents': 'Documents téléversés', 'bill.noDocs': 'Aucun document téléversé pour le moment.',
   'docType.physicians': 'Médecins', 'docType.laboratory': 'Laboratoire', 'docType.radiology': 'Radiologie', 'docType.medications': 'Médicaments', 'docType.other': 'Autre',
   'bill.st.pending': 'En attente', 'bill.st.processing': 'En cours', 'bill.st.extracted': 'Extrait', 'bill.st.needs_review': 'À vérifier', 'bill.st.committed': 'Enregistré', 'bill.st.failed': 'Échec',
+  'bill.coinsurance': 'Coassurance',
+  'bill.postBtn': 'Enregistrer en facturation', 'bill.posting': 'Enregistrement…', 'bill.uploadExtracted': 'Lu correctement — vérifiez et enregistrez ci-dessous.',
 }
 
 const DICTS: Record<Lang, Dict> = { en: EN, es: ES, fr: FR }
