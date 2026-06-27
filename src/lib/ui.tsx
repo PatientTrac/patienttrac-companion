@@ -22,6 +22,7 @@ export const ACCENTS: Record<string, { c: string; from: string; to: string }> = 
   'companion-mobile': { c: C.cyan, from: '#00d4ff', to: '#34d399' },
   admin:      { c: C.gold,  from: '#c9a96e', to: '#e8cc9a' },
   selfchart:  { c: C.cyan,  from: '#00d4ff', to: '#c9a96e' },
+  billing: { c: C.green, from: '#4ade80', to: '#1f9e8f' },
 }
 
 export function PMark({ size = 30 }: { size?: number }) {
@@ -79,6 +80,7 @@ export function Ico({ name, size = 22, color = 'currentColor', stroke = 1.7 }:
     revoke: <><path d="M18 6 6 18M6 6l12 12" /><circle cx="12" cy="12" r="9" /></>,
     filter: <path d="M4 6h16M7 12h10M10 18h4" />,
     refresh: <path d="M23 4v6h-6M1 20v-6h6M3.5 9A9 9 0 0 1 20.5 9M20.5 15A9 9 0 0 1 3.5 15" />,
+    billing: <><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z" /><path d="M9 7h6M9 11h6M9 15h4" /></>,
   }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}

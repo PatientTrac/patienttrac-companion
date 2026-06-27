@@ -15,6 +15,7 @@ import Treatment from './pages/Treatment'
 import Messages from './pages/Messages'
 import Progress from './pages/Progress'
 import SelfChart from './pages/SelfChart'
+import Billing from './pages/Billing'
 
 // [sectionKey, icon, route]
 const NAV: [string, string, string][] = [
@@ -28,6 +29,7 @@ const NAV: [string, string, string][] = [
   ['selfchart', 'flask', '/self-chart'],
   ['messages', 'message', '/messages'],
   ['progress', 'chart', '/progress'],
+  ['billing', 'billing', '/billing'],
 ]
 
 function Shell() {
@@ -97,6 +99,7 @@ function Shell() {
             <Route path="/self-chart" element={<SelfChart />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/progress" element={<Progress />} />
+            <Route path="/billing" element={<Billing />} />
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Routes>
         </div>

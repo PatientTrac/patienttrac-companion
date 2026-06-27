@@ -117,6 +117,11 @@
   force = true
 
 [[redirects]]
+  from = "/api/companion-billing-extract"
+  to = "/.netlify/functions/companion-billing-extract"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200

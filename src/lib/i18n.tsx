@@ -97,6 +97,23 @@ const EN: Dict = {
   'sc.autoTranslated': 'Auto-translated',
   'sc.abnormal': 'Abnormal',
   'sc.refRange': 'Ref:',
+
+  'nav.billing': 'Billing',
+  'bill.title': 'Billing & accounting', 'bill.subtitle': 'Your invoices, payments, insurance coverage and reimbursements.',
+  'bill.balanceDue': 'Balance due', 'bill.youPaid': 'You paid', 'bill.charges': 'Charges', 'bill.insurancePaid': 'Insurance paid',
+  'bill.coverage': 'Insurance coverage', 'bill.primary': 'Primary', 'bill.verified': 'Verified',
+  'bill.copay': 'Co-pay', 'bill.noCopay': 'No co-pay', 'bill.deductible': 'Deductible', 'bill.visits': 'Visits used', 'bill.oop': 'Out-of-pocket',
+  'bill.invoices': 'Invoices', 'bill.due': 'due', 'bill.ofCharges': 'of {total}', 'bill.noInvoices': 'No invoices yet.',
+  'bill.payments': 'Payment history', 'bill.noPayments': 'No payments recorded yet.',
+  'bill.reimbursements': 'Insurance reimbursements', 'bill.noReimbursements': 'No insurance reimbursements yet.',
+  'bill.noCoverage': 'No insurance on file.',
+  'bill.disclaimer': 'This reflects billing records on file and is not a demand for payment. For questions about a charge, message your care team.',
+  'bill.upload': 'Upload a bill or receipt', 'bill.uploadHint': 'Add an invoice, receipt, or insurance statement — we’ll read the amounts automatically.',
+  'bill.uploadBtn': 'Choose file & extract', 'bill.uploading': 'Reading document…',
+  'bill.uploadOk': 'Added and posted to your billing.', 'bill.uploadReview': 'Uploaded — needs review before posting.',
+  'bill.documents': 'Uploaded documents', 'bill.noDocs': 'No documents uploaded yet.',
+  'docType.physicians': 'Physicians', 'docType.laboratory': 'Laboratory', 'docType.radiology': 'Radiology', 'docType.medications': 'Medications', 'docType.other': 'Other',
+  'bill.st.pending': 'Pending', 'bill.st.processing': 'Processing', 'bill.st.extracted': 'Extracted', 'bill.st.needs_review': 'Needs review', 'bill.st.committed': 'Posted', 'bill.st.failed': 'Failed',
 }
 
 const ES: Dict = {
@@ -189,6 +206,23 @@ const ES: Dict = {
   'sc.autoTranslated': 'Traducción automática',
   'sc.abnormal': 'Anormal',
   'sc.refRange': 'Ref:',
+
+  'nav.billing': 'Facturación',
+  'bill.title': 'Facturación y cuentas', 'bill.subtitle': 'Sus facturas, pagos, cobertura de seguro y reembolsos.',
+  'bill.balanceDue': 'Saldo pendiente', 'bill.youPaid': 'Usted pagó', 'bill.charges': 'Cargos', 'bill.insurancePaid': 'Pagó el seguro',
+  'bill.coverage': 'Cobertura de seguro', 'bill.primary': 'Primario', 'bill.verified': 'Verificado',
+  'bill.copay': 'Copago', 'bill.noCopay': 'Sin copago', 'bill.deductible': 'Deducible', 'bill.visits': 'Visitas usadas', 'bill.oop': 'Gasto de bolsillo',
+  'bill.invoices': 'Facturas', 'bill.due': 'vence', 'bill.ofCharges': 'de {total}', 'bill.noInvoices': 'Aún no hay facturas.',
+  'bill.payments': 'Historial de pagos', 'bill.noPayments': 'Aún no hay pagos registrados.',
+  'bill.reimbursements': 'Reembolsos del seguro', 'bill.noReimbursements': 'Aún no hay reembolsos del seguro.',
+  'bill.noCoverage': 'No hay seguro registrado.',
+  'bill.disclaimer': 'Esto refleja los registros de facturación y no es una solicitud de pago. Si tiene preguntas sobre un cargo, escriba a su equipo de atención.',
+  'bill.upload': 'Subir factura o recibo', 'bill.uploadHint': 'Agregue una factura, recibo o estado de seguro — leeremos los montos automáticamente.',
+  'bill.uploadBtn': 'Elegir archivo y extraer', 'bill.uploading': 'Leyendo documento…',
+  'bill.uploadOk': 'Agregado y registrado en su facturación.', 'bill.uploadReview': 'Subido — requiere revisión antes de registrar.',
+  'bill.documents': 'Documentos subidos', 'bill.noDocs': 'Aún no hay documentos subidos.',
+  'docType.physicians': 'Médicos', 'docType.laboratory': 'Laboratorio', 'docType.radiology': 'Radiología', 'docType.medications': 'Medicamentos', 'docType.other': 'Otro',
+  'bill.st.pending': 'Pendiente', 'bill.st.processing': 'Procesando', 'bill.st.extracted': 'Extraído', 'bill.st.needs_review': 'Por revisar', 'bill.st.committed': 'Registrado', 'bill.st.failed': 'Falló',
 }
 
 const FR: Dict = {
@@ -281,6 +315,23 @@ const FR: Dict = {
   'sc.autoTranslated': 'Traduction automatique',
   'sc.abnormal': 'Anormal',
   'sc.refRange': 'Réf :',
+
+  'nav.billing': 'Facturation',
+  'bill.title': 'Facturation et comptes', 'bill.subtitle': "Vos factures, paiements, couverture d'assurance et remboursements.",
+  'bill.balanceDue': 'Solde dû', 'bill.youPaid': 'Vous avez payé', 'bill.charges': 'Frais', 'bill.insurancePaid': "Payé par l'assurance",
+  'bill.coverage': "Couverture d'assurance", 'bill.primary': 'Principale', 'bill.verified': 'Vérifiée',
+  'bill.copay': 'Ticket modérateur', 'bill.noCopay': 'Aucun ticket modérateur', 'bill.deductible': 'Franchise', 'bill.visits': 'Visites utilisées', 'bill.oop': 'Reste à charge',
+  'bill.invoices': 'Factures', 'bill.due': 'échéance', 'bill.ofCharges': 'sur {total}', 'bill.noInvoices': 'Aucune facture pour le moment.',
+  'bill.payments': 'Historique des paiements', 'bill.noPayments': 'Aucun paiement enregistré pour le moment.',
+  'bill.reimbursements': "Remboursements d'assurance", 'bill.noReimbursements': "Aucun remboursement d'assurance pour le moment.",
+  'bill.noCoverage': 'Aucune assurance enregistrée.',
+  'bill.disclaimer': "Ceci reflète les enregistrements de facturation et n'est pas une demande de paiement. Pour toute question sur des frais, contactez votre équipe de soins.",
+  'bill.upload': 'Téléverser une facture ou un reçu', 'bill.uploadHint': "Ajoutez une facture, un reçu ou un relevé d'assurance — nous lirons les montants automatiquement.",
+  'bill.uploadBtn': 'Choisir un fichier et extraire', 'bill.uploading': 'Lecture du document…',
+  'bill.uploadOk': 'Ajouté et enregistré dans votre facturation.', 'bill.uploadReview': 'Téléversé — révision requise avant enregistrement.',
+  'bill.documents': 'Documents téléversés', 'bill.noDocs': 'Aucun document téléversé pour le moment.',
+  'docType.physicians': 'Médecins', 'docType.laboratory': 'Laboratoire', 'docType.radiology': 'Radiologie', 'docType.medications': 'Médicaments', 'docType.other': 'Autre',
+  'bill.st.pending': 'En attente', 'bill.st.processing': 'En cours', 'bill.st.extracted': 'Extrait', 'bill.st.needs_review': 'À vérifier', 'bill.st.committed': 'Enregistré', 'bill.st.failed': 'Échec',
 }
 
 const DICTS: Record<Lang, Dict> = { en: EN, es: ES, fr: FR }
