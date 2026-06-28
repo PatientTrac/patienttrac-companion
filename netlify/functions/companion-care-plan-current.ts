@@ -30,13 +30,15 @@ export const handler = async (event: {
 
   const raw = event.queryStringParameters?.carePlanId
   const carePlanId = raw && /^\d+$/.test(raw) ? Number(raw) : null
+  const locale = event.queryStringParameters?.locale || 'en'
+  const validLocale = ['en', 'es', 'fr'].includes(locale) ? locale : 'en'
 
   const user = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     global: { headers: { Authorization: auth } },
     auth: { persistSession: false },
   })
 
-  const { data, error } = await user.rpc('companion_care_plan_current', { p_care_plan_id: carePlanId })
+  const { data, error } = await user.rpc('companion_care_plan_current', { p_care_plan_id: carePlanId, p_locale: validLocale })
   if (error) return json(500, { error: error.message })
 
   const state = (data as any)?.state

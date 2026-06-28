@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
 import { C, Card, Ico, Spinner, SectionHeader, GradientStat, ACCENTS, useAsync } from '../lib/ui'
 import { useT } from '../lib/i18n'
-import { loadBilling, type BillingSummary, type Invoice, type Payment, type Reimbursement, type Coverage } from '../lib/billing'
+import { loadBilling, markPayment, approvePayment, type BillingSummary, type Invoice, type Payment, type Reimbursement, type Coverage } from '../lib/billing'
+import { useAuth } from '../lib/auth'
 import { uploadBillingDoc, listUploads, commitUpload, voidUpload, updateExtraction, DOC_TYPES, type DocType, type BillingDocUpload } from '../lib/billingUpload'
 
 const money = (n: number | null | undefined, currency = 'USD') =>
@@ -30,9 +31,16 @@ function SubHead({ children }: { children: React.ReactNode }) {
 function UploadPanel({ accent, onDone }: { accent: string; onDone: () => void }) {
   const { t } = useT()
   const [docType, setDocType] = useState<DocType>('physicians')
+  const [docLabel, setDocLabel] = useState('')
+  const [effectiveDate, setEffectiveDate] = useState('')
+  const [amount, setAmount] = useState('')
+  const [currency, setCurrency] = useState('USD')
+  const [notes, setNotes] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const inputStyle = { background: C.navy900, border: `1px solid ${C.subtle}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '7px 10px', width: '100%' }
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -41,6 +49,7 @@ function UploadPanel({ accent, onDone }: { accent: string; onDone: () => void })
     try {
       const { status } = await uploadBillingDoc(file, docType)
       setMsg(t(status === 'extracted' ? 'bill.uploadExtracted' : 'bill.uploadReview'))
+      setDocLabel(''); setEffectiveDate(''); setAmount(''); setNotes('')
       onDone()
     } catch (err: any) {
       setMsg(err?.message || 'Upload failed')
@@ -63,6 +72,30 @@ function UploadPanel({ accent, onDone }: { accent: string; onDone: () => void })
             {t('docType.' + dt)}
           </button>
         ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 11.5, color: C.muted }}>{t('bill.docLabel')}</span>
+          <input value={docLabel} onChange={e => setDocLabel(e.target.value)} disabled={busy} style={inputStyle} placeholder={t('bill.docLabel')} />
+        </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 11.5, color: C.muted }}>{t('bill.effectiveDate')}</span>
+          <input type="date" value={effectiveDate} onChange={e => setEffectiveDate(e.target.value)} disabled={busy} style={inputStyle} />
+        </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 11.5, color: C.muted }}>{t('bill.amount')}</span>
+          <input type="number" value={amount} onChange={e => setAmount(e.target.value)} disabled={busy} style={inputStyle} />
+        </label>
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 11.5, color: C.muted }}>{t('bill.currency')}</span>
+          <select value={currency} onChange={e => setCurrency(e.target.value)} disabled={busy} style={inputStyle as any}>
+            <option value="USD">USD</option><option value="COP">COP</option><option value="EUR">EUR</option>
+          </select>
+        </label>
+        <label style={{ gridColumn: '1/-1', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontSize: 11.5, color: C.muted }}>{t('bill.notes')}</span>
+          <input value={notes} onChange={e => setNotes(e.target.value)} disabled={busy} style={inputStyle} />
+        </label>
       </div>
       <input ref={inputRef} type="file" accept="application/pdf,image/*" onChange={onFile} disabled={busy} style={{ display: 'none' }} />
       <button onClick={() => inputRef.current?.click()} disabled={busy}
@@ -272,29 +305,180 @@ function CoverageCard({ cov, accent }: { cov: Coverage; accent: string }) {
   )
 }
 
-function InvoiceList({ items }: { items: Invoice[] }) {
+const PAYMENT_METHODS = ['cash', 'card', 'transfer', 'check', 'other'] as const
+
+function MarkPaidDialog({ inv, onDone, onCancel }: { inv: Invoice; onDone: () => void; onCancel: () => void }) {
   const { t } = useT()
+  const [amount, setAmount] = useState(String(inv.balance_due))
+  const [method, setMethod] = useState('transfer')
+  const [reference, setReference] = useState('')
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+  const inputStyle = { background: C.navy900, border: `1px solid ${C.subtle}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '7px 10px', width: '100%' }
+
+  async function submit() {
+    if (!amount || Number(amount) <= 0) return
+    setBusy(true); setErr(null)
+    try {
+      await markPayment(inv.invoice_id, Number(amount), method, reference || undefined, note || undefined)
+      onDone()
+    } catch (e: any) {
+      setErr(e?.message || 'Error')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div style={{ padding: '0 20px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+      <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontSize: 11.5, color: C.muted }}>{t('bill.amount')}</span>
+        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} style={inputStyle} />
+      </label>
+      <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontSize: 11.5, color: C.muted }}>{t('bill.method')}</span>
+        <select value={method} onChange={e => setMethod(e.target.value)} style={inputStyle as any}>
+          {PAYMENT_METHODS.map(m => <option key={m} value={m}>{t('bill.method' + m.charAt(0).toUpperCase() + m.slice(1))}</option>)}
+        </select>
+      </label>
+      <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontSize: 11.5, color: C.muted }}>{t('bill.reference')}</span>
+        <input value={reference} onChange={e => setReference(e.target.value)} style={inputStyle} />
+      </label>
+      <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <span style={{ fontSize: 11.5, color: C.muted }}>{t('bill.note')}</span>
+        <input value={note} onChange={e => setNote(e.target.value)} style={inputStyle} />
+      </label>
+      {err && <div style={{ gridColumn: '1/-1', fontSize: 12, color: C.red }}>{err}</div>}
+      <div style={{ gridColumn: '1/-1', display: 'flex', gap: 8, marginTop: 4 }}>
+        <button disabled={busy} onClick={submit}
+          style={{ fontSize: 12.5, fontWeight: 700, padding: '7px 14px', borderRadius: 8, cursor: busy ? 'wait' : 'pointer', color: C.navy950, background: C.mint, border: 'none' }}>
+          {busy ? t('bill.submitting') : t('bill.submit')}
+        </button>
+        <button onClick={onCancel}
+          style={{ fontSize: 12.5, fontWeight: 600, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', color: C.muted, background: 'transparent', border: `1px solid ${C.subtle}` }}>
+          {t('bill.cancel')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function ApproveRejectControls({ inv, onDone }: { inv: Invoice; onDone: () => void }) {
+  const { t } = useT()
+  const [showReject, setShowReject] = useState(false)
+  const [reason, setReason] = useState('')
+  const [reasonErr, setReasonErr] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const inputStyle = { background: C.navy900, border: `1px solid ${C.subtle}`, borderRadius: 8, color: C.text, fontSize: 13, padding: '7px 10px', width: '100%' }
+
+  async function doApprove() {
+    setBusy(true)
+    try { await approvePayment(inv.invoice_id, true); onDone() } finally { setBusy(false) }
+  }
+  async function doReject() {
+    if (!reason.trim()) { setReasonErr(true); return }
+    setBusy(true)
+    try { await approvePayment(inv.invoice_id, false, reason.trim()); onDone() } finally { setBusy(false) }
+  }
+
+  return (
+    <div style={{ padding: '0 20px 12px' }}>
+      {!showReject ? (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button disabled={busy} onClick={doApprove}
+            style={{ fontSize: 12.5, fontWeight: 700, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', color: C.navy950, background: C.green, border: 'none' }}>
+            {t('bill.approve')}
+          </button>
+          <button disabled={busy} onClick={() => setShowReject(true)}
+            style={{ fontSize: 12.5, fontWeight: 600, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', color: C.red, background: 'transparent', border: `1px solid ${C.red}55` }}>
+            {t('bill.reject')}
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 12, color: C.muted }}>{t('bill.rejectReason')}</span>
+            <input value={reason} onChange={e => { setReason(e.target.value); setReasonErr(false) }}
+              style={{ ...inputStyle, border: `1px solid ${reasonErr ? C.red : C.subtle}` }} />
+            {reasonErr && <span style={{ fontSize: 11.5, color: C.red }}>{t('bill.rejectReasonRequired')}</span>}
+          </label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button disabled={busy} onClick={doReject}
+              style={{ fontSize: 12.5, fontWeight: 700, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', color: '#fff', background: C.red, border: 'none' }}>
+              {t('bill.reject')}
+            </button>
+            <button onClick={() => setShowReject(false)}
+              style={{ fontSize: 12.5, fontWeight: 600, padding: '7px 14px', borderRadius: 8, cursor: 'pointer', color: C.muted, background: 'transparent', border: `1px solid ${C.subtle}` }}>
+              {t('bill.cancel')}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function paymentMarkColor(state: string | null): string {
+  if (state === 'pending_approval') return C.amber
+  if (state === 'approved') return C.green
+  if (state === 'rejected') return C.red
+  return C.subtle
+}
+
+function paymentMarkLabel(state: string | null, t: (k: string) => string): string {
+  if (state === 'pending_approval') return t('bill.pendingApproval')
+  if (state === 'approved') return t('bill.approved')
+  if (state === 'rejected') return t('bill.rejected')
+  return ''
+}
+
+function InvoiceList({ items, isStaff, onRefresh }: { items: Invoice[]; isStaff: boolean; onRefresh: () => void }) {
+  const { t } = useT()
+  const [markId, setMarkId] = useState<number | null>(null)
   if (!items.length) return <Card><p style={{ color: C.subtle, fontSize: 14, margin: 0 }}>{t('bill.noInvoices')}</p></Card>
   return (
     <Card style={{ padding: 0, overflow: 'hidden' }}>
-      {items.map((inv, i) => (
-        <div key={inv.invoice_id} style={{ padding: '14px 20px', borderTop: i ? `1px solid ${C.navy700}55` : 'none' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3 }}>
-                <span style={{ fontFamily: 'DM Mono,monospace', fontSize: 13.5, color: C.text, fontWeight: 600 }}>{inv.invoice_number}</span>
-                {inv.status && <Pill label={inv.status} color={statusColor(inv.status)} />}
+      {items.map((inv, i) => {
+        const markState = (inv as any).payment_mark_state as string | null
+        const isMarking = markId === inv.invoice_id
+        return (
+          <div key={inv.invoice_id} style={{ borderTop: i ? `1px solid ${C.navy700}55` : 'none' }}>
+            <div style={{ padding: '14px 20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 3, flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: 'DM Mono,monospace', fontSize: 13.5, color: C.text, fontWeight: 600 }}>{inv.invoice_number}</span>
+                    {inv.status && <Pill label={inv.status} color={statusColor(inv.status)} />}
+                    {markState && <Pill label={paymentMarkLabel(markState, t)} color={paymentMarkColor(markState)} />}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: C.muted }}>{fmtDate(inv.invoice_date)}{inv.due_date ? ` · ${t('bill.due')} ${fmtDate(inv.due_date)}` : ''}</div>
+                  {inv.notes && <div style={{ fontSize: 12, color: C.subtle, marginTop: 3 }}>{inv.notes}</div>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 20, color: inv.balance_due > 0 ? C.amber : C.green }}>{money(inv.balance_due, inv.currency)}</div>
+                    <div style={{ fontSize: 11.5, color: C.subtle }}>{t('bill.ofCharges', { total: money(inv.total_charges, inv.currency) })}</div>
+                  </div>
+                  {inv.balance_due > 0 && !markState && !isMarking && (
+                    <button onClick={() => setMarkId(inv.invoice_id)}
+                      style={{ fontSize: 12, fontWeight: 700, padding: '6px 12px', borderRadius: 8, cursor: 'pointer', color: C.navy950, background: C.mint, border: 'none', whiteSpace: 'nowrap' }}>
+                      {t('bill.markPaid')}
+                    </button>
+                  )}
+                </div>
               </div>
-              <div style={{ fontSize: 12.5, color: C.muted }}>{fmtDate(inv.invoice_date)}{inv.due_date ? ` · ${t('bill.due')} ${fmtDate(inv.due_date)}` : ''}</div>
-              {inv.notes && <div style={{ fontSize: 12, color: C.subtle, marginTop: 3 }}>{inv.notes}</div>}
             </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 20, color: inv.balance_due > 0 ? C.amber : C.green }}>{money(inv.balance_due, inv.currency)}</div>
-              <div style={{ fontSize: 11.5, color: C.subtle }}>{t('bill.ofCharges', { total: money(inv.total_charges, inv.currency) })}</div>
-            </div>
+            {isMarking && (
+              <MarkPaidDialog inv={inv} onDone={() => { setMarkId(null); onRefresh() }} onCancel={() => setMarkId(null)} />
+            )}
+            {isStaff && markState === 'pending_approval' && (
+              <ApproveRejectControls inv={inv} onDone={onRefresh} />
+            )}
           </div>
-        </div>
-      ))}
+        )
+      })}
     </Card>
   )
 }
@@ -338,6 +522,8 @@ function ReimbursementList({ items }: { items: Reimbursement[] }) {
 export default function Billing() {
   const { t } = useT()
   const A = ACCENTS.billing
+  const { staffOrgId } = useAuth()
+  const isStaff = !!staffOrgId
   const [refresh, setRefresh] = useState(0)
   const { data, loading, error } = useAsync(loadBilling, [refresh])
   const uploads = useAsync(listUploads, [refresh])
@@ -364,7 +550,7 @@ export default function Billing() {
             : <Card><p style={{ color: C.subtle, fontSize: 14, margin: 0 }}>{t('bill.noCoverage')}</p></Card>}
 
           <SubHead>{t('bill.invoices')}</SubHead>
-          <InvoiceList items={data.invoices} />
+          <InvoiceList items={data.invoices} isStaff={isStaff} onRefresh={bump} />
 
           <SubHead>{t('bill.payments')}</SubHead>
           <PaymentList items={data.payments} />

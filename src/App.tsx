@@ -31,6 +31,7 @@ const NAV: [string, string, string][] = [
   ['messages', 'message', '/messages'],
   ['progress', 'chart', '/progress'],
   ['billing', 'billing', '/billing'],
+  ['dailylog', 'journal', '/daily-log'],
 ]
 
 function Shell() {

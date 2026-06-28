@@ -93,6 +93,36 @@ export const listPayments       = () => rpc<Payment>('companion_my_payments')
 export const listReimbursements = () => rpc<Reimbursement>('companion_my_reimbursements')
 export const getCoverage        = () => rpc<Coverage>('companion_my_coverage')
 
+export async function markPayment(
+  invoiceId: number, amount: number, method: string, reference?: string, note?: string
+): Promise<void> {
+  const { data: sess } = await (await import('./supabase')).supabase.auth.getSession()
+  const token = sess.session?.access_token
+  if (!token) throw new Error('Not signed in')
+  const res = await fetch('/api/companion-invoice-mark-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ invoice_id: invoiceId, amount, method, reference, note }),
+  })
+  const body = await res.json().catch(() => ({} as any))
+  if (!res.ok) throw new Error(body?.error || `HTTP ${res.status}`)
+}
+
+export async function approvePayment(
+  invoiceId: number, approve: boolean, reason?: string
+): Promise<void> {
+  const { data: sess } = await (await import('./supabase')).supabase.auth.getSession()
+  const token = sess.session?.access_token
+  if (!token) throw new Error('Not signed in')
+  const res = await fetch('/api/companion-invoice-approve-payment', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ invoice_id: invoiceId, approve, reason }),
+  })
+  const body = await res.json().catch(() => ({} as any))
+  if (!res.ok) throw new Error(body?.error || `HTTP ${res.status}`)
+}
+
 export async function loadBilling(): Promise<BillingBundle> {
   const [summary, invoices, payments, reimbursements, coverage] = await Promise.all([
     getBillingSummary(), listInvoices(), listPayments(), listReimbursements(), getCoverage(),

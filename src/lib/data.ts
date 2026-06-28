@@ -169,6 +169,26 @@ export async function translateBlock(
   }
 }
 
+// ── Lab results (flowsheet grid) ────────────────────────────
+export type LabResult = {
+  id: number
+  lab_name: string
+  test_code: string | null
+  result_value: string | null
+  result_unit: string | null
+  reference_range: string | null
+  is_abnormal: boolean | null
+  lab_date: string
+}
+export async function listLabResults(): Promise<LabResult[]> {
+  const { data, error } = await cr()
+    .from('lab_results')
+    .select('id,lab_name,test_code,result_value,result_unit,reference_range,is_abnormal,lab_date')
+    .order('lab_date', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as LabResult[]
+}
+
 // ── Progress trends (patient's own data) ────────────────────
 export type Trends = {
   window_days: number

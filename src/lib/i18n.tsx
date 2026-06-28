@@ -97,8 +97,11 @@ const EN: Dict = {
   'sc.autoTranslated': 'Auto-translated',
   'sc.abnormal': 'Abnormal',
   'sc.refRange': 'Ref:',
+  'sc.labsGrid': 'Grid',
+  'sc.labsList': 'List',
 
   'nav.billing': 'Billing',
+  'nav.dailylog': 'Daily log',
   'bill.title': 'Billing & accounting', 'bill.subtitle': 'Your invoices, payments, insurance coverage and reimbursements.',
   'bill.balanceDue': 'Balance due', 'bill.youPaid': 'You paid', 'bill.charges': 'Charges', 'bill.insurancePaid': 'Insurance paid',
   'bill.coverage': 'Insurance coverage', 'bill.primary': 'Primary', 'bill.verified': 'Verified',
@@ -118,6 +121,15 @@ const EN: Dict = {
   'bill.postBtn': 'Post to billing', 'bill.posting': 'Posting…', 'bill.uploadExtracted': 'Read successfully — review and post it below.',
   'bill.edit': 'Edit', 'bill.void': 'Remove', 'bill.voidReason': 'Why are you removing this?',
   'bill.voidReasonRequired': 'Please give a reason.', 'bill.save': 'Save', 'bill.cancel': 'Cancel',
+  'bill.markPaid': 'Mark as paid', 'bill.markPaidDesc': 'Submit a payment record for review by your care team.',
+  'bill.amount': 'Amount', 'bill.method': 'Method', 'bill.reference': 'Reference', 'bill.note': 'Note',
+  'bill.submit': 'Submit', 'bill.submitting': 'Submitting…',
+  'bill.pendingApproval': 'Pending approval', 'bill.approved': 'Approved', 'bill.rejected': 'Rejected',
+  'bill.approve': 'Approve', 'bill.reject': 'Reject', 'bill.rejectReason': 'Reason for rejection',
+  'bill.rejectReasonRequired': 'Please provide a reason.',
+  'bill.uploadDoc': 'Upload document', 'bill.docType': 'Document type', 'bill.docLabel': 'Title',
+  'bill.effectiveDate': 'Effective date', 'bill.currency': 'Currency', 'bill.notes': 'Notes',
+  'bill.methodCash': 'Cash', 'bill.methodCard': 'Card', 'bill.methodTransfer': 'Transfer', 'bill.methodCheck': 'Check', 'bill.methodOther': 'Other',
 }
 
 const ES: Dict = {
@@ -210,8 +222,11 @@ const ES: Dict = {
   'sc.autoTranslated': 'Traducción automática',
   'sc.abnormal': 'Anormal',
   'sc.refRange': 'Ref:',
+  'sc.labsGrid': 'Cuadrícula',
+  'sc.labsList': 'Lista',
 
   'nav.billing': 'Facturación',
+  'nav.dailylog': 'Registro diario',
   'bill.title': 'Facturación y cuentas', 'bill.subtitle': 'Sus facturas, pagos, cobertura de seguro y reembolsos.',
   'bill.balanceDue': 'Saldo pendiente', 'bill.youPaid': 'Usted pagó', 'bill.charges': 'Cargos', 'bill.insurancePaid': 'Pagó el seguro',
   'bill.coverage': 'Cobertura de seguro', 'bill.primary': 'Primario', 'bill.verified': 'Verificado',
@@ -231,6 +246,15 @@ const ES: Dict = {
   'bill.postBtn': 'Registrar en facturación', 'bill.posting': 'Registrando…', 'bill.uploadExtracted': 'Leído correctamente — revíselo y regístrelo abajo.',
   'bill.edit': 'Editar', 'bill.void': 'Quitar', 'bill.voidReason': '¿Por qué lo quita?',
   'bill.voidReasonRequired': 'Indique un motivo.', 'bill.save': 'Guardar', 'bill.cancel': 'Cancelar',
+  'bill.markPaid': 'Marcar como pagado', 'bill.markPaidDesc': 'Envíe un registro de pago para revisión de su equipo de cuidado.',
+  'bill.amount': 'Monto', 'bill.method': 'Método', 'bill.reference': 'Referencia', 'bill.note': 'Nota',
+  'bill.submit': 'Enviar', 'bill.submitting': 'Enviando…',
+  'bill.pendingApproval': 'Pendiente de aprobación', 'bill.approved': 'Aprobado', 'bill.rejected': 'Rechazado',
+  'bill.approve': 'Aprobar', 'bill.reject': 'Rechazar', 'bill.rejectReason': 'Motivo del rechazo',
+  'bill.rejectReasonRequired': 'Indique un motivo.',
+  'bill.uploadDoc': 'Subir documento', 'bill.docType': 'Tipo de documento', 'bill.docLabel': 'Título',
+  'bill.effectiveDate': 'Fecha efectiva', 'bill.currency': 'Moneda', 'bill.notes': 'Notas',
+  'bill.methodCash': 'Efectivo', 'bill.methodCard': 'Tarjeta', 'bill.methodTransfer': 'Transferencia', 'bill.methodCheck': 'Cheque', 'bill.methodOther': 'Otro',
 }
 
 const FR: Dict = {
@@ -323,8 +347,11 @@ const FR: Dict = {
   'sc.autoTranslated': 'Traduction automatique',
   'sc.abnormal': 'Anormal',
   'sc.refRange': 'Réf :',
+  'sc.labsGrid': 'Grille',
+  'sc.labsList': 'Liste',
 
   'nav.billing': 'Facturation',
+  'nav.dailylog': 'Journal quotidien',
   'bill.title': 'Facturation et comptes', 'bill.subtitle': "Vos factures, paiements, couverture d'assurance et remboursements.",
   'bill.balanceDue': 'Solde dû', 'bill.youPaid': 'Vous avez payé', 'bill.charges': 'Frais', 'bill.insurancePaid': "Payé par l'assurance",
   'bill.coverage': "Couverture d'assurance", 'bill.primary': 'Principale', 'bill.verified': 'Vérifiée',
@@ -344,6 +371,15 @@ const FR: Dict = {
   'bill.postBtn': 'Enregistrer en facturation', 'bill.posting': 'Enregistrement…', 'bill.uploadExtracted': 'Lu correctement — vérifiez et enregistrez ci-dessous.',
   'bill.edit': 'Modifier', 'bill.void': 'Retirer', 'bill.voidReason': 'Pourquoi le retirer ?',
   'bill.voidReasonRequired': 'Veuillez indiquer un motif.', 'bill.save': 'Enregistrer', 'bill.cancel': 'Annuler',
+  'bill.markPaid': 'Marquer comme payé', 'bill.markPaidDesc': 'Soumettez un enregistrement de paiement pour vérification par votre équipe soignante.',
+  'bill.amount': 'Montant', 'bill.method': 'Méthode', 'bill.reference': 'Référence', 'bill.note': 'Note',
+  'bill.submit': 'Soumettre', 'bill.submitting': 'Soumission…',
+  'bill.pendingApproval': 'En attente d\'approbation', 'bill.approved': 'Approuvé', 'bill.rejected': 'Rejeté',
+  'bill.approve': 'Approuver', 'bill.reject': 'Rejeter', 'bill.rejectReason': 'Motif du rejet',
+  'bill.rejectReasonRequired': 'Veuillez indiquer un motif.',
+  'bill.uploadDoc': 'Téléverser un document', 'bill.docType': 'Type de document', 'bill.docLabel': 'Titre',
+  'bill.effectiveDate': 'Date effective', 'bill.currency': 'Devise', 'bill.notes': 'Notes',
+  'bill.methodCash': 'Espèces', 'bill.methodCard': 'Carte', 'bill.methodTransfer': 'Virement', 'bill.methodCheck': 'Chèque', 'bill.methodOther': 'Autre',
 }
 
 const DICTS: Record<Lang, Dict> = { en: EN, es: ES, fr: FR }

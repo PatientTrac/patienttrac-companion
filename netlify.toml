@@ -134,6 +134,18 @@
   force = true
 
 [[redirects]]
+  from = "/api/companion-invoice-mark-payment"
+  to = "/.netlify/functions/companion-invoice-mark-payment"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/companion-invoice-approve-payment"
+  to = "/.netlify/functions/companion-invoice-approve-payment"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
