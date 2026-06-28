@@ -82,6 +82,7 @@ export function Ico({ name, size = 22, color = 'currentColor', stroke = 1.7 }:
     filter: <path d="M4 6h16M7 12h10M10 18h4" />,
     refresh: <path d="M23 4v6h-6M1 20v-6h6M3.5 9A9 9 0 0 1 20.5 9M20.5 15A9 9 0 0 1 3.5 15" />,
     billing: <><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z" /><path d="M9 7h6M9 11h6M9 15h4" /></>,
+    calendar: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" /></>,
   }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
