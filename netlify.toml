@@ -122,6 +122,18 @@
   status = 200
 
 [[redirects]]
+  from = "/api/companion-care-plan-current"
+  to = "/.netlify/functions/companion-care-plan-current"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/companion-log-day"
+  to = "/.netlify/functions/companion-log-day"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
