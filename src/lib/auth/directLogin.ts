@@ -6,7 +6,6 @@
 // App-entry gate:  identity AND ( session is AAL2  OR  this device is trusted  OR  cross-app token )
 // Data layer:      identity only, via SECURITY DEFINER RPCs (cr.current_patient_id()). Never AAL2-gated.
 //
-// NOTE: fix the import below to match the actual Supabase client module path in this repo.
 import { supabase } from '../supabase';
 import { setLastEmail } from './loginPrefs';
 import { getVerifiedTotpFactorId, mfaChallengeNeeded, challengeAndVerify, beginEnrollment, EnrollResult } from './mfa';

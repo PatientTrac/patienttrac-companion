@@ -141,6 +141,8 @@ const EN: Dict = {
   'bill.uploadDoc': 'Upload document', 'bill.docType': 'Document type', 'bill.docLabel': 'Title',
   'bill.effectiveDate': 'Effective date', 'bill.currency': 'Currency', 'bill.notes': 'Notes',
   'bill.methodCash': 'Cash', 'bill.methodCard': 'Card', 'bill.methodTransfer': 'Transfer', 'bill.methodCheck': 'Check', 'bill.methodOther': 'Other',
+  'bill.viewIn': 'View amounts in',
+  'bill.fxApprox': 'Converted amounts use live exchange rates and are approximate. Your invoice currency is the authoritative amount owed.',
 }
 
 const ES: Dict = {
@@ -277,6 +279,8 @@ const ES: Dict = {
   'bill.uploadDoc': 'Subir documento', 'bill.docType': 'Tipo de documento', 'bill.docLabel': 'Título',
   'bill.effectiveDate': 'Fecha efectiva', 'bill.currency': 'Moneda', 'bill.notes': 'Notas',
   'bill.methodCash': 'Efectivo', 'bill.methodCard': 'Tarjeta', 'bill.methodTransfer': 'Transferencia', 'bill.methodCheck': 'Cheque', 'bill.methodOther': 'Otro',
+  'bill.viewIn': 'Ver montos en',
+  'bill.fxApprox': 'Los montos convertidos usan tasas de cambio actuales y son aproximados. La moneda de su factura es el monto adeudado.',
 }
 
 const FR: Dict = {
@@ -413,6 +417,8 @@ const FR: Dict = {
   'bill.uploadDoc': 'Téléverser un document', 'bill.docType': 'Type de document', 'bill.docLabel': 'Titre',
   'bill.effectiveDate': 'Date effective', 'bill.currency': 'Devise', 'bill.notes': 'Notes',
   'bill.methodCash': 'Espèces', 'bill.methodCard': 'Carte', 'bill.methodTransfer': 'Virement', 'bill.methodCheck': 'Chèque', 'bill.methodOther': 'Autre',
+  'bill.viewIn': 'Afficher les montants en',
+  'bill.fxApprox': 'Les montants convertis utilisent les taux de change en temps réel et sont approximatifs. La devise de votre facture fait foi.',
 }
 
 const DICTS: Record<Lang, Dict> = { en: EN, es: ES, fr: FR }

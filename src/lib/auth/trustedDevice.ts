@@ -12,7 +12,6 @@
 //   cr.patient_check_trusted_device(p_raw_token) -> boolean
 //   cr.patient_revoke_trusted_device(p_raw_token | null) -> json   (null revokes ALL devices)
 //
-// NOTE: fix the import below to match the actual Supabase client module path in this repo.
 import { supabase } from '../supabase';
 
 const DEVICE_TOKEN_KEY = 'ptc.deviceToken';

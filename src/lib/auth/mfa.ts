@@ -4,7 +4,6 @@
 // patient read/write RPCs resolve identity via cr.current_patient_id(), so cross-app (AAL1)
 // entry keeps working. MFA is enforced at the login UI only.
 //
-// NOTE: fix the import below to match the actual Supabase client module path in this repo.
 import { supabase } from '../supabase';
 
 export type AalState = { currentLevel: string | null; nextLevel: string | null };
