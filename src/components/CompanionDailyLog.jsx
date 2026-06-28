@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   ChevronLeft, ChevronRight, Thermometer, Heart, Activity, Wind, Scale,
   AlertTriangle, Check, Plus, Minus, Snowflake, Pill, ClipboardCopy,
@@ -200,13 +200,16 @@ export default function CompanionDailyLog({
   const [saveState, setSaveState] = useState("idle"); // idle|saving|saved|error
   const [copied, setCopied] = useState(false);
 
-  const loader = loadCarePlan || ((id) => defaultLoad(endpoint, getAccessToken, id));
-  const saver = saveDay || ((payload) => defaultSave(saveEndpoint, getAccessToken, payload));
+  // Keep refs to the latest loader/saver so useCallback can have empty deps (stable identity).
+  const loaderRef = useRef(null);
+  loaderRef.current = loadCarePlan || ((id) => defaultLoad(endpoint, getAccessToken, id));
+  const saverRef = useRef(null);
+  saverRef.current = saveDay || ((payload) => defaultSave(saveEndpoint, getAccessToken, payload));
 
   const load = useCallback(async (carePlanId) => {
     setState("loading"); setErrMsg("");
     try {
-      const { status, body } = await loader(carePlanId);
+      const { status, body } = await loaderRef.current(carePlanId);
       if (status === 401) { setState("unauthorized"); return; }
       if (status === 404) { setAvailable(body?.available || []); setState("no_plan"); return; }
       if (status >= 400 || !body?.current) { setErrMsg(body?.error || `HTTP ${status}`); setState("error"); return; }
@@ -219,7 +222,7 @@ export default function CompanionDailyLog({
     } catch (e) {
       setErrMsg(String(e && e.message ? e.message : e)); setState("error");
     }
-  }, [loader]);
+  }, []); // stable — reads live loader from ref, won't re-fire on every render
 
   useEffect(() => { load(null); }, [load]);
 
@@ -261,7 +264,7 @@ export default function CompanionDailyLog({
         meds: draft.meds, prn: draft.prn,
         bowel: Number(draft.bowel) || 0, diarrhea: !!draft.diarrhea,
       };
-      const { status, body } = await saver(payload);
+      const { status, body } = await saverRef.current(payload);
       setSaveState(status === 200 && body && body.state === "ok" ? "saved" : "error");
     } catch (_) {
       setSaveState("error");
