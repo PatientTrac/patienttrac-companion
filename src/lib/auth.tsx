@@ -42,15 +42,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data) { setPatientId(data.patient_id); setOrgId(data.org_id) }
     else      { setPatientId(null); setOrgId(null) }
 
-    // Staff check: RLS policy members_read_own_row allows SELECT where user_id = auth.uid(),
-    // so the anon client can read the caller's own row directly without a server function.
+    // Staff check via server function — verifies JWT and queries saas.org_members
+    // with the service role. Requires saas schema in Supabase exposed schemas list.
     try {
-      const { data: member } = await supabase.schema('saas').from('org_members')
-        .select('org_id, role')
-        .eq('user_id', currentSession.user.id)
-        .maybeSingle()
-      setStaffOrgId(member?.org_id ?? null)
-      setStaffRole(member?.role ?? null)
+      const res = await fetch('/api/mobile-staff-me', {
+        headers: { Authorization: `Bearer ${currentSession.access_token}` },
+      })
+      if (res.ok) {
+        const d: { isStaff: boolean; orgId: string | null; role: string | null } = await res.json()
+        setStaffOrgId(d.isStaff ? d.orgId : null)
+        setStaffRole(d.isStaff ? d.role : null)
+      } else {
+        setStaffOrgId(null)
+        setStaffRole(null)
+      }
     } catch {
       setStaffOrgId(null)
       setStaffRole(null)
