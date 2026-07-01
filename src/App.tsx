@@ -35,7 +35,7 @@ const NAV: [string, string, string][] = [
 ]
 
 function Shell() {
-  const { signOut } = useAuth()
+  const { signOut, staffOrgId } = useAuth()
   const { t } = useT()
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '272px 1fr', minHeight: '100dvh' }}>
@@ -76,6 +76,15 @@ function Shell() {
         </nav>
 
         <div style={{ marginTop: 12 }}>
+          {staffOrgId && (
+            <NavLink to="/admin/companion-mobile" style={({ isActive }) => ({
+              display: 'flex', alignItems: 'center', gap: 10, padding: '8px 11px', borderRadius: 10,
+              marginBottom: 8, textDecoration: 'none', fontSize: 13, fontWeight: isActive ? 700 : 500,
+              color: C.gold, background: `${C.gold}14`, border: `1px solid ${C.gold}33`,
+            })}>
+              <Ico name="shield" size={14} color={C.gold} stroke={2} /> Admin
+            </NavLink>
+          )}
           <div style={{ marginBottom: 12 }}><LanguageSwitcher /></div>
           <button onClick={() => signOut()} style={{ width: '100%', background: 'transparent', border: `1px solid ${C.subtle}`, color: C.muted, borderRadius: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <Ico name="lock" size={14} color={C.muted} /> {t('common.signOut')}
