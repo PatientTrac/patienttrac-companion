@@ -11,6 +11,8 @@ type AuthState = {
   orgId: string | null
   staffOrgId: string | null
   staffRole: string | null
+  recoveryMode: boolean
+  clearRecovery: () => void
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string) => Promise<{ needsConfirm: boolean }>
   signOut: () => Promise<void>
@@ -32,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [orgId, setOrgId]           = useState<string | null>(null)
   const [staffOrgId, setStaffOrgId] = useState<string | null>(null)
   const [staffRole, setStaffRole]   = useState<string | null>(null)
+  const [recoveryMode, setRecoveryMode] = useState(false)
 
   async function resolveLink(currentSession: Session) {
     // Patient account check (existing path)
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
     const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
+      if (_e === 'PASSWORD_RECOVERY') setRecoveryMode(true)
       setSession(s)
       if (s) await resolveLink(s)
       else { setPatientId(null); setOrgId(null); setStaffOrgId(null); setStaffRole(null) }
@@ -86,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { needsConfirm: !data.session }
   }
   const signOut = async () => { await supabase.auth.signOut() }
+  const clearRecovery = () => setRecoveryMode(false)
   const redeemInvite = async (token: string) => {
     const { error } = await cr().rpc('redeem_patient_invite', { p_token: token.trim() })
     if (error) throw error
@@ -94,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ loading, session, patientId, orgId, staffOrgId, staffRole, signIn, signUp, signOut, redeemInvite }}>
+    <AuthContext.Provider value={{ loading, session, patientId, orgId, staffOrgId, staffRole, recoveryMode, clearRecovery, signIn, signUp, signOut, redeemInvite }}>
       {children}
     </AuthContext.Provider>
   )

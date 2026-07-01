@@ -125,7 +125,7 @@ function Shell() {
 // Dual-role users (staff + patient) get the admin shell on /admin/* and
 // the patient shell on all other routes — no global default to admin.
 function Gate() {
-  const { loading, session, patientId, staffOrgId } = useAuth()
+  const { loading, session, patientId, staffOrgId, recoveryMode } = useAuth()
   const { t } = useT()
   const location = useLocation()
 
@@ -134,6 +134,7 @@ function Gate() {
       <Spinner label={t('common.loading')} />
     </div>
   )
+  if (recoveryMode) return <Auth stage="recovery" />
   if (!session) return <Auth stage="auth" />
 
   const isAdminRoute = location.pathname.startsWith('/admin')
