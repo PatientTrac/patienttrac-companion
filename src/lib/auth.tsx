@@ -42,21 +42,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data) { setPatientId(data.patient_id); setOrgId(data.org_id) }
     else      { setPatientId(null); setOrgId(null) }
 
-    // Staff check via server function (amendment 8).
-    // Uses mobile-staff-me.ts which queries saas.org_members with service role,
-    // avoiding uncertainty about whether the anon client can read saas schema.
+    // Staff check: RLS policy members_read_own_row allows SELECT where user_id = auth.uid(),
+    // so the anon client can read the caller's own row directly without a server function.
     try {
-      const res = await fetch('/api/mobile-staff-me', {
-        headers: { Authorization: `Bearer ${currentSession.access_token}` },
-      })
-      if (res.ok) {
-        const d: { isStaff: boolean; orgId: string | null; role: string | null } = await res.json()
-        setStaffOrgId(d.isStaff ? d.orgId : null)
-        setStaffRole(d.isStaff ? d.role : null)
-      } else {
-        setStaffOrgId(null)
-        setStaffRole(null)
-      }
+      const { data: member } = await supabase.schema('saas').from('org_members')
+        .select('org_id, role')
+        .eq('user_id', currentSession.user.id)
+        .maybeSingle()
+      setStaffOrgId(member?.org_id ?? null)
+      setStaffRole(member?.role ?? null)
     } catch {
       setStaffOrgId(null)
       setStaffRole(null)
