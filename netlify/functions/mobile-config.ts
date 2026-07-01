@@ -89,7 +89,8 @@ export const handler = async (event: NetlifyEvent) => {
 
   let result: any
   if (!existing) {
-    if (!('clientDisplayName' in patch) || !patch['client_display_name']) {
+    const clientDisplayName = String(body.clientDisplayName ?? '').trim()
+    if (!clientDisplayName) {
       return jsonErr(400, 'INVALID_REQUEST', 'clientDisplayName is required when creating config')
     }
     const { data, error } = await admin.schema('cr').from('companion_mobile_tenant_config')
