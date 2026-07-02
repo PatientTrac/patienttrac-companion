@@ -22,6 +22,7 @@ export const ACCENTS: Record<string, { c: string; from: string; to: string }> = 
   'companion-mobile': { c: C.cyan, from: '#00d4ff', to: '#34d399' },
   admin:      { c: C.gold,  from: '#c9a96e', to: '#e8cc9a' },
   selfchart:  { c: C.cyan,  from: '#00d4ff', to: '#c9a96e' },
+  records:    { c: C.cyan,  from: '#00d4ff', to: '#34d399' },
   billing: { c: C.green, from: '#4ade80', to: '#1f9e8f' },
   dailylog: { c: C.gold, from: '#c9a96e', to: '#fbbf24' },
   profile: { c: C.violet, from: '#8b7cff', to: '#6366f1' },

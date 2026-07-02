@@ -16,6 +16,7 @@ import Treatment from './pages/Treatment'
 import Messages from './pages/Messages'
 import Progress from './pages/Progress'
 import SelfChart from './pages/SelfChart'
+import Records from './pages/Records'
 import Billing from './pages/Billing'
 import DailyLog from './pages/DailyLog'
 import Profile from './pages/Profile'
@@ -30,6 +31,7 @@ const NAV: [string, string, string][] = [
   ['journal', 'journal', '/journal'],
   ['treatment', 'plan', '/treatment'],
   ['selfchart', 'flask', '/self-chart'],
+  ['records', 'device', '/records'],
   ['messages', 'message', '/messages'],
   ['progress', 'chart', '/progress'],
   ['billing', 'billing', '/billing'],
@@ -112,6 +114,7 @@ function Shell() {
             <Route path="/treatment" element={<Treatment />} />
             <Route path="/daily-log" element={<DailyLog />} />
             <Route path="/self-chart" element={<SelfChart />} />
+            <Route path="/records" element={<Records />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/billing" element={<Billing />} />
