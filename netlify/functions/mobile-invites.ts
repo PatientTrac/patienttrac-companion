@@ -106,8 +106,8 @@ export const handler = async (event: NetlifyEvent) => {
     return jsonErr(500, 'INTERNAL_ERROR', 'Failed to create invite')
   }
 
-  const baseUrl = (process.env.MOBILE_PAIRING_BASE_URL || 'https://mobile.patienttrac.com/pair').replace(/\/$/, '')
-  const pairUrl = `${baseUrl}/${raw}`
+  const baseUrl = (process.env.MOBILE_PAIRING_BASE_URL || 'https://patienttraccompanion.com/pair').replace(/\/$/, '')
+  const pairUrl = `${baseUrl}?code=${raw}`
 
   await writeAuditEvent(admin, {
     tenantId: staff.orgId,

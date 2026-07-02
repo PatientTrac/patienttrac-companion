@@ -5,6 +5,7 @@ import { I18nProvider, useT } from './lib/i18n'
 import { AuthProvider, useAuth } from './lib/auth'
 import AdminShell from './lib/AdminShell'
 import Auth from './pages/Auth'
+import Pair from './pages/Pair'
 import Today from './pages/Today'
 import Medications from './pages/Medications'
 import Diet from './pages/Diet'
@@ -152,7 +153,10 @@ function Gate() {
 export default function App() {
   return (
     <I18nProvider>
-      <AuthProvider><Gate /></AuthProvider>
+      <Routes>
+        <Route path="/pair" element={<Pair />} />
+        <Route path="*" element={<AuthProvider><Gate /></AuthProvider>} />
+      </Routes>
     </I18nProvider>
   )
 }

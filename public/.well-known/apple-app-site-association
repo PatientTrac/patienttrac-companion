@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.patienttrac.companion"],
+        "components": [
+          {
+            "/": "/pair",
+            "?": { "code": "?*" },
+            "comment": "Match /pair?code=... for companion device pairing"
+          }
+        ]
+      }
+    ]
+  }
+}
