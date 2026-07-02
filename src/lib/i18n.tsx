@@ -129,6 +129,7 @@ const EN: Dict = {
 
   'nav.billing': 'Billing',
   'nav.dailylog': 'Daily log',
+  'nav.profile': 'My Profile',
   'bill.title': 'Billing & accounting', 'bill.subtitle': 'Your invoices, payments, insurance coverage and reimbursements.',
   'bill.balanceDue': 'Balance due', 'bill.youPaid': 'You paid', 'bill.charges': 'Charges', 'bill.insurancePaid': 'Insurance paid',
   'bill.coverage': 'Insurance coverage', 'bill.primary': 'Primary', 'bill.verified': 'Verified',
@@ -283,6 +284,7 @@ const ES: Dict = {
 
   'nav.billing': 'Facturación',
   'nav.dailylog': 'Registro diario',
+  'nav.profile': 'Mi perfil',
   'bill.title': 'Facturación y cuentas', 'bill.subtitle': 'Sus facturas, pagos, cobertura de seguro y reembolsos.',
   'bill.balanceDue': 'Saldo pendiente', 'bill.youPaid': 'Usted pagó', 'bill.charges': 'Cargos', 'bill.insurancePaid': 'Pagó el seguro',
   'bill.coverage': 'Cobertura de seguro', 'bill.primary': 'Primario', 'bill.verified': 'Verificado',
@@ -437,6 +439,7 @@ const FR: Dict = {
 
   'nav.billing': 'Facturation',
   'nav.dailylog': 'Journal quotidien',
+  'nav.profile': 'Mon profil',
   'bill.title': 'Facturation et comptes', 'bill.subtitle': "Vos factures, paiements, couverture d'assurance et remboursements.",
   'bill.balanceDue': 'Solde dû', 'bill.youPaid': 'Vous avez payé', 'bill.charges': 'Frais', 'bill.insurancePaid': "Payé par l'assurance",
   'bill.coverage': "Couverture d'assurance", 'bill.primary': 'Principale', 'bill.verified': 'Vérifiée',
