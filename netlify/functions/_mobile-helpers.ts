@@ -59,10 +59,13 @@ export function hmacHex(value: string, secret: string): string {
   return createHmac('sha256', secret).update(value).digest('hex')
 }
 
-// ── Pairing code (amendment 3: 16-char, 80-bit, unbiased bit packing) ─────────
+// ── Pairing code (amendment 3: 16-char, unbiased bit packing via rejection) ────
 //
-// Uses 10 random bytes (80 bits). Each character consumes exactly 5 bits from the
-// bit stream. Since 2^5 = 32 = alphabet size, there is zero modulo bias.
+// Reads random bytes 5 bits at a time. The alphabet is 31 chars (I/L/O excluded
+// for human legibility), so a 5-bit group (0–31) can land on 31, which has no
+// character. Rather than fold it back in — which would bias char 0 — we REJECT
+// value 31 and draw more bits until we have 16 valid chars. This keeps zero
+// modulo bias while preserving the exact 31-char human-facing alphabet.
 // Display format: PT-XXXXXXXX-XXXXXXXX (prefix + two 8-char groups, 16 code chars)
 // Stored format: HMAC-SHA256(16-char normalized code, MOBILE_PAIRING_CODE_SECRET)
 
@@ -70,14 +73,15 @@ export function generatePairingCode(): { raw: string; hash: string; last4: strin
   const secret = process.env.MOBILE_PAIRING_CODE_SECRET
   if (!secret) throw new Error('MOBILE_PAIRING_CODE_SECRET is not configured')
 
-  const bytes = randomBytes(10) // 80 bits
-  let bitStr = ''
-  for (const b of bytes) bitStr += b.toString(2).padStart(8, '0')
-
   const chars: string[] = []
-  for (let i = 0; i < 16; i++) {
-    const idx = parseInt(bitStr.slice(i * 5, i * 5 + 5), 2) // 0–31, no bias
-    chars.push(PAIRING_CHARSET[idx])
+  while (chars.length < 16) {
+    const bytes = randomBytes(10) // 80 bits = 16 five-bit groups per draw
+    let bitStr = ''
+    for (const b of bytes) bitStr += b.toString(2).padStart(8, '0')
+    for (let i = 0; i < 16 && chars.length < 16; i++) {
+      const idx = parseInt(bitStr.slice(i * 5, i * 5 + 5), 2) // 0–31
+      if (idx < PAIRING_CHARSET.length) chars.push(PAIRING_CHARSET[idx]) // reject 31 → no bias
+    }
   }
 
   const raw = `PT-${chars.slice(0, 8).join('')}-${chars.slice(8).join('')}`
