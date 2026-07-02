@@ -1,4 +1,4 @@
-import { NavLink, Routes, Route, Navigate } from 'react-router-dom'
+import { NavLink, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { C, PMark, Ico, Spinner, ACCENTS } from './ui'
 import { useAuth } from './auth'
 import CompanionMobile from '../pages/admin/CompanionMobile'
@@ -9,12 +9,19 @@ import CompanionMobilePatient from '../pages/admin/CompanionMobilePatient'
 import CompanionMobileSessions from '../pages/admin/CompanionMobileSessions'
 import CompanionMobileAudit from '../pages/admin/CompanionMobileAudit'
 
-const ADMIN_NAV: [string, string, string][] = [
-  ['companion-mobile', 'mobile', '/admin/companion-mobile'],
+const SUBNAV: [string, string, string, boolean][] = [
+  // [label, icon, path, exact]
+  ['Overview',      'today',   '/admin/companion-mobile',              true],
+  ['Invites',       'qr',      '/admin/companion-mobile/invites',      false],
+  ['Sessions',      'mobile',  '/admin/companion-mobile/sessions',     false],
+  ['Sync Monitor',  'vitals',  '/admin/companion-mobile/sync-monitor', false],
+  ['Audit Log',     'plan',    '/admin/companion-mobile/audit',        false],
+  ['Settings',      'shield',  '/admin/companion-mobile/settings',     false],
 ]
 
 export default function AdminShell() {
   const { signOut, staffRole, staffOrgId } = useAuth()
+  const navigate = useNavigate()
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '272px 1fr', minHeight: '100dvh' }}>
@@ -23,9 +30,9 @@ export default function AdminShell() {
         borderRight: '1px solid rgba(255,255,255,0.06)',
         padding: '22px 16px',
         position: 'sticky', top: 0, height: '100dvh',
-        display: 'flex', flexDirection: 'column',
+        display: 'flex', flexDirection: 'column', overflowY: 'auto',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 26, padding: '0 6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 20, padding: '0 6px' }}>
           <PMark size={36} />
           <span style={{ lineHeight: 1 }}>
             <span style={{ fontFamily: 'Poppins,Rajdhani,sans-serif', fontWeight: 700, fontSize: 18 }}>
@@ -35,25 +42,39 @@ export default function AdminShell() {
           </span>
         </div>
 
+        {/* Back to patient dashboard */}
+        <button onClick={() => navigate('/today')} style={{
+          display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 9,
+          marginBottom: 18, background: 'transparent', border: `1px solid ${C.subtle}33`,
+          color: C.muted, fontSize: 12.5, cursor: 'pointer', textAlign: 'left',
+        }}>
+          <Ico name="chart" size={13} color={C.muted} /> Patient Dashboard
+        </button>
+
+        {/* Section label */}
+        <div style={{ fontSize: 10.5, color: C.subtle, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', padding: '0 6px', marginBottom: 8 }}>
+          Companion Mobile
+        </div>
+
         <nav style={{ flex: 1 }}>
-          {ADMIN_NAV.map(([key, ic, to]) => {
-            const a = ACCENTS[key] || ACCENTS.admin
+          {SUBNAV.map(([label, ic, to, exact]) => {
+            const a = ACCENTS['companion-mobile'] || { c: C.cyan, from: '#00d4ff', to: '#34d399' }
             return (
-              <NavLink key={to} to={to} style={({ isActive }) => ({
-                display: 'flex', alignItems: 'center', gap: 12, padding: '9px 11px', borderRadius: 12,
-                marginBottom: 5, textDecoration: 'none', fontSize: 14.5, fontWeight: isActive ? 700 : 500,
+              <NavLink key={to} to={to} end={exact} style={({ isActive }) => ({
+                display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10,
+                marginBottom: 3, textDecoration: 'none', fontSize: 13.5, fontWeight: isActive ? 700 : 500,
                 color: isActive ? C.text : C.muted,
                 background: isActive ? `linear-gradient(120deg, ${a.c}1f, transparent)` : 'transparent',
               })}>
                 {({ isActive }: { isActive: boolean }) => (<>
                   <span style={{
-                    width: 34, height: 34, borderRadius: 10, flexShrink: 0, display: 'grid', placeItems: 'center',
-                    background: isActive ? `linear-gradient(150deg, ${a.from}, ${a.to})` : `${a.c}1a`,
+                    width: 30, height: 30, borderRadius: 8, flexShrink: 0, display: 'grid', placeItems: 'center',
+                    background: isActive ? `linear-gradient(150deg, ${a.from}, ${a.to})` : `${a.c}18`,
                     border: `1px solid ${isActive ? 'transparent' : a.c + '33'}`,
                   }}>
-                    <Ico name={ic} size={18} color={isActive ? C.navy950 : a.c} stroke={2} />
+                    <Ico name={ic} size={15} color={isActive ? C.navy950 : a.c} stroke={2} />
                   </span>
-                  Companion Mobile
+                  {label}
                 </>)}
               </NavLink>
             )
