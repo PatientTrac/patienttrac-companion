@@ -1,28 +1,42 @@
 import { Link } from 'react-router-dom'
 import { C, Card, Ico, Spinner, Hero, GradientStat, ACCENTS, useAsync } from '../lib/ui'
-import { CareScene, AiNetwork } from '../lib/art'
+import { CareScene, AiNetwork, HeroCircuit } from '../lib/art'
 import { useT } from '../lib/i18n'
 import { listMeds, takenTodayIds, listDietToday, listActivityToday, listJournal, listVitals } from '../lib/data'
+import { supabase } from '../lib/supabase'
+
+async function fetchFriendlyName(): Promise<string | null> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return null
+    const res = await fetch('/api/patient-profile', { headers: { Authorization: `Bearer ${session.access_token}` } })
+    if (!res.ok) return null
+    const j = await res.json()
+    const p = j?.profile
+    return (p?.friendly_name || p?.first_name || null)
+  } catch { return null }
+}
 
 export default function Today() {
   const { t, lang } = useT()
   const today = new Date().toLocaleDateString(lang, { weekday: 'long', month: 'long', day: 'numeric' })
   const { data, loading, error } = useAsync(async () => {
-    const [meds, taken, diet, activity, journal, vitals] = await Promise.all([
-      listMeds(), takenTodayIds(), listDietToday(), listActivityToday(), listJournal(), listVitals(),
+    const [meds, taken, diet, activity, journal, vitals, friendlyName] = await Promise.all([
+      listMeds(), takenTodayIds(), listDietToday(), listActivityToday(), listJournal(), listVitals(), fetchFriendlyName(),
     ])
     const todayStr = new Date().toISOString().slice(0, 10)
     const checkin = journal.some(j => j.entry_date === todayStr)
-    return { medsTaken: taken.length, medsTotal: meds.length, meals: diet.length, activity: activity.length, checkin, latestVital: vitals[0] }
+    return { medsTaken: taken.length, medsTotal: meds.length, meals: diet.length, activity: activity.length, checkin, latestVital: vitals[0], friendlyName }
   }, [])
 
   return (
     <div className="cmp-stagger">
       <Hero style={{ marginBottom: 22 }}>
-        <div style={{ display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+        <HeroCircuit />
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 18, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
           <div style={{ minWidth: 260, flex: 1 }}>
             <div style={{ fontFamily: 'DM Mono,monospace', fontSize: 12, color: C.mint, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 8 }}>{today}</div>
-            <h1 style={{ fontSize: 'clamp(28px,4vw,40px)', color: C.text, lineHeight: 1.05 }}>{t('today.greeting')}</h1>
+            <h1 style={{ fontSize: 'clamp(28px,4vw,40px)', color: C.text, lineHeight: 1.05 }}>{data?.friendlyName ? t('today.greetingName', { name: data.friendlyName }) : t('today.greeting')}</h1>
             <p style={{ color: C.muted, marginTop: 12, fontSize: 14.5, lineHeight: 1.65, maxWidth: 440 }}>{t('today.planBody')}</p>
             <Link to="/treatment" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16, color: C.navy950, fontWeight: 700, fontFamily: 'Rajdhani,sans-serif', fontSize: 15, textDecoration: 'none', background: `linear-gradient(135deg, ${C.mint}, ${C.mintDk})`, borderRadius: 11, padding: '11px 18px', boxShadow: `0 8px 20px ${C.mint}33` }}>
               {t('today.viewPlan')} <Ico name="arrow" size={16} color={C.navy950} />

@@ -99,3 +99,89 @@ export function Pulse({ width = 160, height = 28, color = '#34d399', style }:
     </svg>
   )
 }
+
+// Full-bleed futuristic AI backdrop for hero panels — circuit traces with
+// travelling data pulses, drifting nodes, and a receding perspective grid.
+// Brand palette (mint/cyan/gold on deep navy); heaviest on the right so hero
+// text on the left stays readable. Animations are SVG-native and disabled
+// globally by the prefers-reduced-motion rule in index.css.
+export function HeroCircuit({ style }: { style?: React.CSSProperties }) {
+  const traces = [
+    'M600 30 h90 l26 26 h140 l30 30 h114',
+    'M640 78 h120 l22 22 h110 l26 26 h82',
+    'M580 150 h70 l-20 20 h-90',
+    'M700 190 h130 l24 -24 h146',
+    'M660 236 h90 l20 20 h150',
+  ]
+  const nodes: [number, number, string][] = [
+    [690, 30, '#00d4ff'], [856, 86, '#34d399'], [1000, 86, '#c9a96e'],
+    [760, 78, '#34d399'], [1018, 126, '#00d4ff'], [650, 150, '#c9a96e'],
+    [830, 190, '#00d4ff'], [1000, 166, '#34d399'], [750, 236, '#c9a96e'], [920, 256, '#00d4ff'],
+  ]
+  return (
+    <svg viewBox="0 0 1100 300" preserveAspectRatio="xMidYMid slice" aria-hidden
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', ...style }}>
+      <defs>
+        <linearGradient id="hc-beam" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#34d399" stopOpacity="0" />
+          <stop offset="0.5" stopColor="#34d399" stopOpacity="0.55" />
+          <stop offset="1" stopColor="#00d4ff" stopOpacity="0" />
+        </linearGradient>
+        <radialGradient id="hc-orb1" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stopColor="#00d4ff" stopOpacity="0.16" /><stop offset="1" stopColor="#00d4ff" stopOpacity="0" />
+        </radialGradient>
+        <radialGradient id="hc-orb2" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stopColor="#c9a96e" stopOpacity="0.13" /><stop offset="1" stopColor="#c9a96e" stopOpacity="0" />
+        </radialGradient>
+        <linearGradient id="hc-fade" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#0a1628" stopOpacity="0.9" />
+          <stop offset="0.45" stopColor="#0a1628" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+
+      {/* ambient orbs */}
+      <circle cx="920" cy="70" r="200" fill="url(#hc-orb1)" />
+      <circle cx="700" cy="260" r="170" fill="url(#hc-orb2)" />
+
+      {/* receding perspective grid (floor) */}
+      <g stroke="#00d4ff" opacity="0.10">
+        {[0, 1, 2, 3, 4].map(i => (
+          <line key={`h${i}`} x1={380 - i * 60} y1={230 + i * 18} x2={1100} y2={230 + i * 18} strokeWidth={0.7 + i * 0.15} />
+        ))}
+        {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+          <line key={`v${i}`} x1={480 + i * 90} y1="300" x2={560 + i * 74} y2="222" strokeWidth="0.7" />
+        ))}
+      </g>
+
+      {/* circuit traces with travelling pulses */}
+      <g fill="none" strokeLinecap="round">
+        {traces.map((d, i) => (
+          <g key={i}>
+            <path d={d} stroke="#34d399" strokeWidth="1" opacity="0.16" />
+            <path d={d} stroke="url(#hc-beam)" strokeWidth="1.6" strokeDasharray="46 340" opacity="0.85">
+              <animate attributeName="stroke-dashoffset" values="386;0" dur={`${5 + i * 1.3}s`} repeatCount="indefinite" />
+            </path>
+          </g>
+        ))}
+      </g>
+
+      {/* junction nodes */}
+      {nodes.map(([x, y, c], i) => (
+        <g key={i}>
+          <circle cx={x} cy={y} r="7" fill={c} opacity="0.12" />
+          <circle cx={x} cy={y} r="2.4" fill={c} opacity="0.9">
+            <animate attributeName="opacity" values="0.35;0.95;0.35" dur={`${2.6 + (i % 5) * 0.6}s`} repeatCount="indefinite" />
+          </circle>
+        </g>
+      ))}
+
+      {/* scan sweep */}
+      <rect x="560" y="0" width="2" height="300" fill="#34d399" opacity="0.10">
+        <animate attributeName="x" values="560;1080;560" dur="14s" repeatCount="indefinite" />
+      </rect>
+
+      {/* left fade so hero copy stays readable */}
+      <rect x="0" y="0" width="760" height="300" fill="url(#hc-fade)" />
+    </svg>
+  )
+}

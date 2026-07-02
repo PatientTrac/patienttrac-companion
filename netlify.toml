@@ -134,6 +134,12 @@
   force = true
 
 [[redirects]]
+  from = "/api/companion-log-history"
+  to = "/.netlify/functions/companion-log-history"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/companion-invoice-mark-payment"
   to = "/.netlify/functions/companion-invoice-mark-payment"
   status = 200
@@ -163,6 +169,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
 
 # Apple App Site Association — must be served as application/json with no redirect
 [[headers]]

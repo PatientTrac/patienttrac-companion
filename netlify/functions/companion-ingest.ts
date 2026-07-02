@@ -38,10 +38,11 @@ export const handler = async (event: { httpMethod: string; headers: Record<strin
     }
 
     // ── Idempotency ───────────────────────────────────────────────────────────
-    // Accept header if provided; auto-generate if absent so older app versions
-    // that don't send the header still succeed (idempotency is best-effort then).
+    // REQUIRED: mobile clients retry on flaky networks; without a stable key,
+    // retries would insert duplicate clinical rows. (Aligned with the test
+    // contract — previously the handler silently auto-generated a key.)
     const idempotencyKey = (event.headers['idempotency-key'] || event.headers['Idempotency-Key'] || '').trim()
-      || crypto.randomUUID()
+    if (!idempotencyKey) return jsonErr(400, 'IDEMPOTENCY_KEY_REQUIRED', 'Idempotency-Key header is required')
 
     const { data: existing } = await admin.schema('cr').from('companion_mobile_sync_batch')
       .select('id, status')

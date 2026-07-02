@@ -1,7 +1,18 @@
 // netlify/functions/companion-ai.ts
 // Server-side proxy for Companion's education assistant (treatment / diet / exercise).
-// Strict, non-diagnostic, non-prescriptive guardrails. ENV: ANTHROPIC_API_KEY (server-only).
+// Strict, non-diagnostic, non-prescriptive guardrails.
+// ENV: ANTHROPIC_API_KEY (server-only), SUPABASE_URL, SUPABASE_ANON_KEY.
+//
+// AUTH (audit C1): requires a valid Supabase patient JWT. Previously this
+// endpoint was unauthenticated — an open relay against the Anthropic key.
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_URL = process.env.SUPABASE_URL!
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY!
+
+const MAX_QUESTION_CHARS = 2000
+const MAX_CONTEXT_CHARS = 8000
 
 const BASE = `You are PatientTrac Companion's patient-education assistant.
 You explain things in plain, calm, encouraging language so patients understand their care.
@@ -19,14 +30,36 @@ const TOPIC: Record<string, string> = {
   exercise: 'Topic: movement and activity. Only reinforce the clinician/physical-therapy plan the patient already has. Do NOT invent new exercises, sets, reps, or intensity. Emphasize gentle, within-plan movement, stopping if pain increases, and checking with their physical therapist or care team.',
 }
 
-export const handler = async (event: { httpMethod: string; body: string | null }) => {
-  if (event.httpMethod !== 'POST') return { statusCode: 405, body: 'Method Not Allowed' }
+const json = (statusCode: number, body: unknown) => ({
+  statusCode,
+  headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  body: JSON.stringify(body),
+})
+
+export const handler = async (event: { httpMethod: string; headers: Record<string, string>; body: string | null }) => {
+  if (event.httpMethod !== 'POST') return json(405, { error: 'method_not_allowed' })
+
+  // ── Require a valid Supabase session (patient JWT) ─────────────────────────
+  const auth = event.headers.authorization || event.headers.Authorization || ''
+  if (!auth.toLowerCase().startsWith('bearer ')) return json(401, { error: 'unauthorized' })
+  const token = auth.slice(7).trim()
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } })
+  const { data: userData, error: userErr } = await supabase.auth.getUser(token)
+  if (userErr || !userData?.user) return json(401, { error: 'unauthorized' })
+
   try {
     const { topic, question, context, planSummary } = JSON.parse(event.body || '{}')
+    if (typeof question !== 'string' || !question.trim()) return json(400, { error: 'bad_request' })
+    if (question.length > MAX_QUESTION_CHARS) return json(400, { error: 'question_too_long' })
+
     const apiKey = process.env.ANTHROPIC_API_KEY
-    if (!apiKey) return { statusCode: 500, body: JSON.stringify({ error: 'AI not configured' }) }
+    if (!apiKey) return json(500, { error: 'AI not configured' })
+
     const topicLine = TOPIC[topic as string] || TOPIC.treatment
-    const ctx = context || planSummary || 'none provided'
+    const rawCtx = typeof context === 'string' && context ? context
+      : typeof planSummary === 'string' && planSummary ? planSummary : 'none provided'
+    const ctx = rawCtx.slice(0, MAX_CONTEXT_CHARS)
 
     const client = new Anthropic({ apiKey })
     const msg = await client.messages.create({
@@ -36,8 +69,8 @@ export const handler = async (event: { httpMethod: string; body: string | null }
       messages: [{ role: 'user', content: `Care-plan context: ${ctx}\n\nPatient question: ${question}` }],
     })
     const text = msg.content.filter(b => b.type === 'text').map((b: any) => b.text).join('\n')
-    return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) }
+    return json(200, { text })
   } catch (e: any) {
-    return { statusCode: 500, body: JSON.stringify({ error: e?.message || 'error' }) }
+    return json(500, { error: e?.message || 'error' })
   }
 }

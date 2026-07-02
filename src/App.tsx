@@ -41,19 +41,19 @@ function Shell() {
   const { signOut, staffOrgId } = useAuth()
   const { t } = useT()
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '272px 1fr', minHeight: '100dvh' }}>
-      <aside style={{ background: `linear-gradient(180deg, ${C.navy900}, ${C.navy950})`, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '22px 16px', position: 'sticky', top: 0, height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+    <div className="cmp-shell">
+      <aside className="cmp-aside" style={{ background: `linear-gradient(180deg, ${C.navy900}, ${C.navy950})`, borderRight: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 26, padding: '0 6px' }}>
           <PMark size={36} />
           <span style={{ lineHeight: 1 }}>
             <span style={{ fontFamily: 'Poppins,Rajdhani,sans-serif', fontWeight: 700, fontSize: 18 }}>
               <span style={{ color: C.text }}>Patient</span><span style={{ color: C.gold }}>Trac</span>
             </span>
-            <span style={{ display: 'block', fontWeight: 600, fontSize: 13.5, color: C.mint, marginTop: 3 }}>Companion</span>
+            <span className="cmp-brand-sub" style={{ display: 'block', fontWeight: 600, fontSize: 13.5, color: C.mint, marginTop: 3 }}>Companion</span>
           </span>
         </div>
 
-        <nav style={{ flex: 1 }}>
+        <nav className="cmp-nav">
           {NAV.map(([key, ic, to]) => {
             const a = ACCENTS[key]
             return (
@@ -71,14 +71,14 @@ function Shell() {
                   }}>
                     <Ico name={ic} size={18} color={isActive ? C.navy950 : a.c} stroke={2} />
                   </span>
-                  {t('nav.' + key)}
+                  <span>{t('nav.' + key)}</span>
                 </>)}
               </NavLink>
             )
           })}
         </nav>
 
-        <div style={{ marginTop: 12 }}>
+        <div className="cmp-aside-footer" style={{ marginTop: 12 }}>
           {staffOrgId && (
             <NavLink to="/admin/companion-mobile" style={({ isActive }) => ({
               display: 'flex', alignItems: 'center', gap: 10, padding: '8px 11px', borderRadius: 10,
@@ -88,17 +88,17 @@ function Shell() {
               <Ico name="shield" size={14} color={C.gold} stroke={2} /> Admin
             </NavLink>
           )}
-          <div style={{ marginBottom: 12 }}><LanguageSwitcher /></div>
+          <div style={{ marginBottom: 0 }}><LanguageSwitcher /></div>
           <button onClick={() => signOut()} style={{ width: '100%', background: 'transparent', border: `1px solid ${C.subtle}`, color: C.muted, borderRadius: 10, padding: '9px 12px', fontSize: 13, cursor: 'pointer', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <Ico name="lock" size={14} color={C.muted} /> {t('common.signOut')}
           </button>
-          <div style={{ fontSize: 11, color: C.subtle, display: 'flex', alignItems: 'center', gap: 6, padding: '0 4px' }}>
+          <div className="cmp-hide-mobile" style={{ fontSize: 11, color: C.subtle, display: 'flex', alignItems: 'center', gap: 6, padding: '0 4px' }}>
             <Ico name="shield" size={13} color={C.subtle} /> {t('common.private')}
           </div>
         </div>
       </aside>
 
-      <main style={{ position: 'relative', padding: 'clamp(20px,3vw,40px)', maxWidth: 1120, overflow: 'hidden' }}>
+      <main className="cmp-main">
         <Glow color={C.mint} size={420} opacity={0.10} style={{ top: -160, right: -120 }} />
         <div style={{ position: 'relative' }} className="cmp-fade-up">
           <Routes>
