@@ -24,6 +24,7 @@ export const ACCENTS: Record<string, { c: string; from: string; to: string }> = 
   selfchart:  { c: C.cyan,  from: '#00d4ff', to: '#c9a96e' },
   billing: { c: C.green, from: '#4ade80', to: '#1f9e8f' },
   dailylog: { c: C.gold, from: '#c9a96e', to: '#fbbf24' },
+  profile: { c: C.violet, from: '#8b7cff', to: '#6366f1' },
 }
 
 export function PMark({ size = 30 }: { size?: number }) {
@@ -83,6 +84,11 @@ export function Ico({ name, size = 22, color = 'currentColor', stroke = 1.7 }:
     refresh: <path d="M23 4v6h-6M1 20v-6h6M3.5 9A9 9 0 0 1 20.5 9M20.5 15A9 9 0 0 1 3.5 15" />,
     billing: <><path d="M6 2h12v20l-3-2-3 2-3-2-3 2z" /><path d="M9 7h6M9 11h6M9 15h4" /></>,
     calendar: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" /></>,
+    user: <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>,
+    camera: <><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></>,
+    phone: <path d="M22 16.9v3a2 2 0 0 1-2.18 2A19.79 19.79 0 0 1 3.1 5.18 2 2 0 0 1 5 3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L9.1 11a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.375 1.84.6 2.81.7A2 2 0 0 1 23 18l-.1 2z" />,
+    mail: <><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" /><polyline points="22,6 12,13 2,6" /></>,
+    home: <><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z" /><path d="M9 21V12h6v9" /></>,
   }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
