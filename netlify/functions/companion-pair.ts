@@ -150,19 +150,33 @@ export const handler = async (event: { httpMethod: string; headers: Record<strin
 
   await recordPairingAttempt(admin, ipHash, uaHash, true)
 
+  // Both camelCase and snake_case provided so iOS apps using either naming convention
+  // can parse the response without needing a mapping layer.
   return jsonOk({
-    tenantId: invite.tenant_id,
-    tenantSlug: invite.tenant_id,
-    clientDisplayName: config.client_display_name,
-    patientExternalId: invite.patient_external_id,
+    tenantId:           invite.tenant_id,
+    tenant_id:          invite.tenant_id,
+    tenantSlug:         invite.tenant_id,
+    clientDisplayName:  config.client_display_name,
+    client_display_name: config.client_display_name,
+    patientExternalId:  invite.patient_external_id,
+    patient_external_id: invite.patient_external_id,
     accessToken,
+    access_token:       accessToken,
     refreshToken,
+    refresh_token:      refreshToken,
     accessExpiresAt,
+    access_expires_at:  accessExpiresAt,
     refreshExpiresAt,
-    ingestionEndpoint: process.env.MOBILE_INGESTION_PUBLIC_URL || '/api/companion-ingest',
-    allowedVitalTypes: allowedTypes,
+    refresh_expires_at: refreshExpiresAt,
+    ingestionEndpoint:  process.env.MOBILE_INGESTION_PUBLIC_URL || '/api/companion-ingest',
+    ingestion_endpoint: process.env.MOBILE_INGESTION_PUBLIC_URL || '/api/companion-ingest',
+    allowedVitalTypes:  allowedTypes,
+    allowed_vital_types: allowedTypes,
     defaultBackfillDays: config.default_backfill_days ?? 30,
-    privacyNoticeUrl: config.privacy_notice_url ?? null,
-    termsUrl: config.terms_url ?? null,
+    default_backfill_days: config.default_backfill_days ?? 30,
+    privacyNoticeUrl:   config.privacy_notice_url ?? null,
+    privacy_notice_url: config.privacy_notice_url ?? null,
+    termsUrl:           config.terms_url ?? null,
+    terms_url:          config.terms_url ?? null,
   })
 }

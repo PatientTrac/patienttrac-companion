@@ -1,17 +1,31 @@
 {
   "applinks": {
-    "apps": [],
     "details": [
       {
-        "appIDs": ["TEAMID.com.patienttrac.companion"],
+        "appIDs": [
+          "TEAMID.com.patienttrac.companion"
+        ],
         "components": [
           {
             "/": "/pair",
+            "comment": "Match /pair (no query string) — universal link opens app at pair screen"
+          },
+          {
+            "/": "/pair",
             "?": { "code": "?*" },
-            "comment": "Match /pair?code=... for companion device pairing"
+            "comment": "Match /pair?code=<anything> — passes code directly to app"
+          },
+          {
+            "/": "/pair/*",
+            "comment": "Match /pair/<any sub-path> as catch-all"
           }
         ]
       }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAMID.com.patienttrac.companion"
     ]
   }
 }

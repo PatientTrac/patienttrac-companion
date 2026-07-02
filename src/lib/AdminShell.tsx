@@ -1,4 +1,4 @@
-import { NavLink, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import { NavLink, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { C, PMark, Ico, Spinner, ACCENTS } from './ui'
 import { useAuth } from './auth'
 import CompanionMobile from '../pages/admin/CompanionMobile'
@@ -19,9 +19,24 @@ const SUBNAV: [string, string, string, boolean][] = [
   ['Settings',      'shield',  '/admin/companion-mobile/settings',     false],
 ]
 
+const BREADCRUMB: Record<string, string> = {
+  '/admin/companion-mobile':              'Overview',
+  '/admin/companion-mobile/invites':      'Invites',
+  '/admin/companion-mobile/sessions':     'Sessions',
+  '/admin/companion-mobile/sync-monitor': 'Sync Monitor',
+  '/admin/companion-mobile/audit':        'Audit Log',
+  '/admin/companion-mobile/settings':     'Settings',
+}
+
 export default function AdminShell() {
   const { signOut, staffRole, staffOrgId } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const crumbLabel = (() => {
+    if (location.pathname.includes('/patients/')) return 'Patient Detail'
+    return BREADCRUMB[location.pathname] || 'Companion Mobile'
+  })()
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '272px 1fr', minHeight: '100dvh' }}>
@@ -100,8 +115,28 @@ export default function AdminShell() {
         </div>
       </aside>
 
-      <main style={{ position: 'relative', padding: 'clamp(20px,3vw,40px)', maxWidth: 1280 }}>
-        <div className="cmp-fade-up">
+      <main style={{ position: 'relative', maxWidth: 1280 }}>
+        {/* Top breadcrumb bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '14px clamp(20px,3vw,40px)', borderBottom: `1px solid ${C.subtle}22`,
+          marginBottom: 0,
+        }}>
+          <button onClick={() => navigate('/today')} style={{
+            display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none',
+            color: C.muted, cursor: 'pointer', fontSize: 13, padding: '4px 8px', borderRadius: 7,
+          }}>
+            <Ico name="home" size={13} color={C.muted} /> Dashboard
+          </button>
+          <span style={{ color: C.subtle, fontSize: 13 }}>/</span>
+          <span style={{ color: C.muted, fontSize: 13 }}>Companion Mobile</span>
+          {crumbLabel !== 'Overview' && <>
+            <span style={{ color: C.subtle, fontSize: 13 }}>/</span>
+            <span style={{ color: C.text, fontSize: 13, fontWeight: 600 }}>{crumbLabel}</span>
+          </>}
+        </div>
+
+        <div style={{ padding: 'clamp(20px,3vw,40px)' }} className="cmp-fade-up">
           <Routes>
             <Route path="/admin/companion-mobile"              element={<CompanionMobile />} />
             <Route path="/admin/companion-mobile/settings"     element={<CompanionMobileSettings />} />
