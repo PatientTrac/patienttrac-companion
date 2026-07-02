@@ -68,12 +68,15 @@ const tile = (c: string): React.CSSProperties => ({ position: 'relative', overfl
 export default function Vitals() {
   const { t, lang } = useT()
   const auth = useAuth(); const ctx = ctxOf(auth)
-  const { data, loading, error, reload } = useAsync(() => listVitalsRange(90), [])
   const [type, setType] = useState(TYPES[0][0]); const [val, setVal] = useState('')
   const [vital, setVital] = useState<string>('all')
   const [days, setDays] = useState(7)
+  // Overview: all types over a wide window — feeds the chip list + Today tiles (stable across selection).
+  const ov = useAsync(() => listVitalsRange(90), [])
+  // View: the actual DB search driven by the current selection (vital + period). Re-queries on change.
+  const vw = useAsync(() => listVitalsRange(days, vital === 'all' ? undefined : vital), [days, vital])
   const A = ACCENTS.vitals
-  const rows = data ?? []
+  const rows = ov.data ?? []
 
   const label = (ty: string) => { const k = 'vit.' + ty; const s = t(k); return s === k ? ty.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : s }
   const countLabel = (n: number) => n === 1 ? t('vit.reading1') : t('vit.readingsN', { n })
@@ -83,7 +86,7 @@ export default function Vitals() {
   const add = async () => {
     const n = Number(val); if (!val || Number.isNaN(n)) return
     const unit = TYPES.find(x => x[0] === type)?.[1] || ''
-    await addVital(ctx, type, n, unit); setVal(''); reload()
+    await addVital(ctx, type, n, unit); setVal(''); ov.reload(); vw.reload()
   }
 
   const todayK = dayKey(new Date().toISOString())
@@ -95,8 +98,8 @@ export default function Vitals() {
     return out
   }, [rows])
 
-  const startMs = useMemo(() => { const d = new Date(); d.setDate(d.getDate() - (days - 1)); d.setHours(0, 0, 0, 0); return d.getTime() }, [days])
-  const inRange = useMemo(() => rows.filter(r => new Date(r.recorded_at).getTime() >= startMs && (vital === 'all' || r.type === vital)), [rows, startMs, vital])
+  // View rows already come back filtered by the DB (period + type) for the current selection.
+  const inRange = vw.data ?? []
 
   const todayByType = useMemo(() => {
     const m: Record<string, Vital[]> = {}
@@ -151,12 +154,12 @@ export default function Vitals() {
         </div>
       </Card>
 
-      {loading && <Spinner label={t('common.loading')} />}
-      {error && <p style={{ color: C.red, fontSize: 14 }}>{error}</p>}
+      {ov.loading && <Spinner label={t('common.loading')} />}
+      {ov.error && <p style={{ color: C.red, fontSize: 14 }}>{ov.error}</p>}
 
-      {!loading && !error && presentTypes.length === 0 && <p style={{ color: C.subtle, fontSize: 14 }}>{t('vit.none')}</p>}
+      {!ov.loading && !ov.error && presentTypes.length === 0 && <p style={{ color: C.subtle, fontSize: 14 }}>{t('vit.none')}</p>}
 
-      {!loading && !error && presentTypes.length > 0 && (
+      {!ov.loading && !ov.error && presentTypes.length > 0 && (
         <>
           <h2 style={h2Style}>{t('vit.today')}</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12, marginBottom: 22 }}>
@@ -201,19 +204,24 @@ export default function Vitals() {
             </div>
           </div>
 
-          {vital !== 'all' && series.length > 0 && (
-            <Card style={{ marginBottom: 16 }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
-                <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 17, fontWeight: 700, color: C.text }}>{label(vital)}</span>
-                <span style={{ fontSize: 12, color: C.subtle, fontFamily: 'DM Mono,monospace' }}>{t('vit.byDay')} · {t('vit.avg')}</span>
-              </div>
-              <BarRow series={series} color={vColor(vital)} dateLabel={dateLabel} />
-            </Card>
-          )}
-
-          {inRange.length === 0 ? (
+          {vw.error ? (
+            <p style={{ color: C.red, fontSize: 14 }}>{vw.error}</p>
+          ) : vw.loading && !vw.data ? (
+            <Spinner label={t('common.loading')} />
+          ) : inRange.length === 0 ? (
             <p style={{ color: C.subtle, fontSize: 14 }}>{t('vit.noneRange')}</p>
-          ) : vital === 'all' ? (
+          ) : (
+            <>
+              {vital !== 'all' && series.length > 0 && (
+                <Card style={{ marginBottom: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
+                    <span style={{ fontFamily: 'Rajdhani,sans-serif', fontSize: 17, fontWeight: 700, color: C.text }}>{label(vital)}</span>
+                    <span style={{ fontSize: 12, color: C.subtle, fontFamily: 'DM Mono,monospace' }}>{t('vit.byDay')} · {t('vit.avg')}</span>
+                  </div>
+                  <BarRow series={series} color={vColor(vital)} dateLabel={dateLabel} />
+                </Card>
+              )}
+              {vital === 'all' ? (
             <div style={{ display: 'grid', gap: 12 }}>
               {byDay.map(([dk, tm]) => (
                 <Card key={dk}>
@@ -254,6 +262,8 @@ export default function Vitals() {
                 </Card>
               ))}
             </div>
+          )}
+            </>
           )}
         </>
       )}

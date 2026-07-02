@@ -59,17 +59,17 @@ export async function listVitals(): Promise<Vital[]> {
   if (error) throw error
   return data ?? []
 }
-// Ranged fetch for the Vitals dashboard: all readings within the last `days`
-// days (patient-local), across every type, for client-side day-grouping and
-// per-vital comparison. Bounded by a hard row cap so a chatty device stream
-// can't blow up the payload.
-export async function listVitalsRange(days: number): Promise<Vital[]> {
+// Ranged fetch for the Vitals dashboard. The DB does the search: filtered by
+// `days` (patient-local window) and, when given, by vital `type` server-side —
+// so changing the selection re-queries rather than sifting a cached blob.
+// Bounded by a hard row cap so a chatty device stream can't blow up the payload.
+export async function listVitalsRange(days: number, type?: string): Promise<Vital[]> {
   const since = new Date(); since.setDate(since.getDate() - (days - 1)); since.setHours(0, 0, 0, 0)
-  const { data, error } = await cr().from('companion_vital')
+  let q = cr().from('companion_vital')
     .select('id,type,value,unit,recorded_at')
     .gte('recorded_at', since.toISOString())
-    .order('recorded_at', { ascending: false })
-    .limit(2000)
+  if (type) q = q.eq('type', type)
+  const { data, error } = await q.order('recorded_at', { ascending: false }).limit(2000)
   if (error) throw error
   return data ?? []
 }
