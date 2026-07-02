@@ -19,17 +19,26 @@ export const handler = async (event: NetlifyEvent) => {
   const q = event.queryStringParameters?.q as string | null
   if (!q || q.trim().length < 2) return jsonOk({ items: [] })
 
-  const term = `%${q.trim()}%`
+  const trimmed = q.trim()
+  const term = `%${trimmed}%`
+  const numericId = /^\d+$/.test(trimmed) ? parseInt(trimmed, 10) : null
   const limit = Math.min(parseInt(event.queryStringParameters?.limit as string || '20', 10), 50)
 
   // cr.patient schema: assumes first_name, last_name columns (standard PatientTrac clinical schema).
   // Falls back gracefully if columns differ — the catch returns an empty list rather than crashing.
   try {
-    const { data, error } = await admin.schema('cr').from('patient')
+    let query = admin.schema('cr').from('patient')
       .select('patient_id, first_name, last_name')
       .eq('org_id', staff.orgId)
-      .or(`first_name.ilike.${term},last_name.ilike.${term}`)
-      .limit(limit)
+
+    if (numericId !== null) {
+      // Numeric query: match patient_id exactly OR name fragment
+      query = query.or(`patient_id.eq.${numericId},first_name.ilike.${term},last_name.ilike.${term}`)
+    } else {
+      query = query.or(`first_name.ilike.${term},last_name.ilike.${term}`)
+    }
+
+    const { data, error } = await query.limit(limit)
 
     if (error) throw error
 
