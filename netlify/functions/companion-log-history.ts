@@ -39,7 +39,7 @@ export const handler = async (event: {
     auth: { persistSession: false },
   })
 
-  const { data, error } = await user.rpc('companion_log_history', {
+  const { data, error } = await user.schema('cr').rpc('companion_log_history', {
     p_care_plan_id: carePlanId,
     p_from: from,
     p_to: to,

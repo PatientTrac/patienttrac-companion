@@ -10,7 +10,7 @@
 --      Source of truth for re-hydrating the Daily Log calendar. RLS: patient rw,
 --      staff read within org.
 --   2. cr.companion_save_day_log(...) — SECURITY INVOKER upsert of the snapshot,
---      then delegates to the existing cr.companion_log_day(...) RPC so the
+--      then delegates to the existing public.companion_log_day(...) RPC so the
 --      clinical fan-out (companion_vital / companion_med_log) is unchanged.
 --   3. cr.companion_log_history(...) — SECURITY INVOKER ranged read of snapshots.
 --
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS cr.companion_day_log (
   id            SERIAL PRIMARY KEY,
   patient_id    INTEGER NOT NULL REFERENCES cr.patient(patient_id) ON DELETE CASCADE,
   org_id        UUID    NOT NULL,
-  care_plan_id  INTEGER NOT NULL REFERENCES cr.care_plan(care_plan_id) ON DELETE CASCADE,
+  care_plan_id  INTEGER NOT NULL REFERENCES cr.care_plan(id) ON DELETE CASCADE,
   log_date      DATE    NOT NULL,
   entry         JSONB   NOT NULL DEFAULT '{}'::jsonb,  -- {vitals,meds,prn,bowel,diarrhea,areas,notes,device}
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -67,7 +67,7 @@ BEGIN
   -- Plan must belong to the calling patient (RLS on care_plan also enforces this).
   SELECT org_id INTO v_org_id
   FROM cr.care_plan
-  WHERE care_plan_id = p_care_plan_id AND patient_id = v_patient_id;
+  WHERE id = p_care_plan_id AND patient_id = v_patient_id;
   IF NOT FOUND THEN
     RETURN jsonb_build_object('state', 'not_found');
   END IF;
@@ -78,7 +78,7 @@ BEGIN
   DO UPDATE SET entry = EXCLUDED.entry, updated_at = now();
 
   -- Preserve the existing clinical fan-out exactly as before.
-  v_fanout := cr.companion_log_day(
+  v_fanout := public.companion_log_day(
     p_care_plan_id,
     p_log_date,
     COALESCE(p_entry->'vitals', '{}'::jsonb),

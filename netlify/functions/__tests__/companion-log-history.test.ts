@@ -8,7 +8,10 @@ import { handler } from '../companion-log-history'
 
 const mockRpc = (data: unknown, error: unknown = null) => {
   const rpc = vi.fn().mockResolvedValue({ data, error })
-  ;(createClient as any).mockReturnValue({ rpc })
+  // client must resolve the RPC in the `cr` schema (function lives in cr, not public)
+  const schema = vi.fn().mockReturnValue({ rpc })
+  ;(createClient as any).mockReturnValue({ schema, rpc })
+  ;(rpc as any).schemaSpy = schema
   return rpc
 }
 
@@ -50,6 +53,7 @@ describe('companion-log-history', () => {
     expect(res.statusCode).toBe(200)
     expect(JSON.parse(res.body).days['2026-06-15'].notes).toBe('ok day')
     expect(rpc).toHaveBeenCalledWith('companion_log_history', { p_care_plan_id: 7, p_from: '2026-06-01', p_to: '2026-06-30' })
+    expect((rpc as any).schemaSpy).toHaveBeenCalledWith('cr') // RPC must resolve in cr, not public
     const clientArgs = (createClient as any).mock.calls[0]
     expect(clientArgs[2].global.headers.Authorization).toBe('Bearer tok')
   })
