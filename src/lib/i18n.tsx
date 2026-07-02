@@ -95,6 +95,9 @@ const EN: Dict = {
   'vit.connect': 'Connect', 'vit.requiresApp': 'Requires the mobile app', 'vit.comingSoon': 'Coming soon', 'vit.recent': 'Recent readings', 'vit.none': 'No readings yet.', 'vit.add': 'Add reading', 'vit.value': 'Value',
   'vit.disclaimer': "Readings from consumer watches and devices are for information only and aren't a medical diagnosis. If something doesn't feel right, contact your care team.",
   'vit.heart_rate': 'Heart rate', 'vit.bp_systolic': 'BP systolic', 'vit.spo2': 'SpO₂', 'vit.weight_kg': 'Weight', 'vit.temp_c': 'Temperature',
+  'vit.resting_heart_rate': 'Resting heart rate', 'vit.active_energy': 'Active energy',
+  'vit.today': 'Today', 'vit.allVitals': 'All vitals', 'vit.p7': '7 days', 'vit.p30': '30 days', 'vit.p90': '90 days',
+  'vit.avg': 'avg', 'vit.readingsN': '{n} readings', 'vit.reading1': '1 reading', 'vit.noneToday': 'No reading today', 'vit.noneRange': 'No readings in this range.', 'vit.latest': 'Latest', 'vit.range': 'range', 'vit.byDay': 'By day',
 
   'jr.title': 'Daily check-in', 'jr.subtitle': 'A quick note on how today went. Your care team can see this between visits.',
   'jr.feeling': 'How are you feeling?', 'jr.pain': 'Pain level', 'jr.note': 'Anything you want your team to know? (swelling, sleep, questions…)',
@@ -279,6 +282,9 @@ const ES: Dict = {
   'vit.connect': 'Conectar', 'vit.requiresApp': 'Requiere la app móvil', 'vit.comingSoon': 'Próximamente', 'vit.recent': 'Lecturas recientes', 'vit.none': 'Sin lecturas aún.', 'vit.add': 'Agregar lectura', 'vit.value': 'Valor',
   'vit.disclaimer': 'Las lecturas de relojes y dispositivos de consumo son solo informativas y no son un diagnóstico médico. Si algo no se siente bien, contacta a tu equipo de cuidado.',
   'vit.heart_rate': 'Frecuencia cardíaca', 'vit.bp_systolic': 'Presión sistólica', 'vit.spo2': 'SpO₂', 'vit.weight_kg': 'Peso', 'vit.temp_c': 'Temperatura',
+  'vit.resting_heart_rate': 'Frecuencia cardíaca en reposo', 'vit.active_energy': 'Energía activa',
+  'vit.today': 'Hoy', 'vit.allVitals': 'Todos los signos', 'vit.p7': '7 días', 'vit.p30': '30 días', 'vit.p90': '90 días',
+  'vit.avg': 'prom', 'vit.readingsN': '{n} lecturas', 'vit.reading1': '1 lectura', 'vit.noneToday': 'Sin lectura hoy', 'vit.noneRange': 'Sin lecturas en este rango.', 'vit.latest': 'Última', 'vit.range': 'rango', 'vit.byDay': 'Por día',
 
   'jr.title': 'Registro diario', 'jr.subtitle': 'Una nota rápida sobre cómo fue tu día. Tu equipo de cuidado puede verla entre visitas.',
   'jr.feeling': '¿Cómo te sientes?', 'jr.pain': 'Nivel de dolor', 'jr.note': '¿Algo que quieras que sepa tu equipo? (hinchazón, sueño, preguntas…)',
@@ -463,6 +469,9 @@ const FR: Dict = {
   'vit.connect': 'Connecter', 'vit.requiresApp': "Nécessite l'application mobile", 'vit.comingSoon': 'Bientôt disponible', 'vit.recent': 'Mesures récentes', 'vit.none': 'Aucune mesure.', 'vit.add': 'Ajouter une mesure', 'vit.value': 'Valeur',
   'vit.disclaimer': "Les mesures des montres et appareils grand public sont fournies à titre informatif et ne constituent pas un diagnostic médical. Si quelque chose ne va pas, contactez votre équipe soignante.",
   'vit.heart_rate': 'Fréquence cardiaque', 'vit.bp_systolic': 'Pression systolique', 'vit.spo2': 'SpO₂', 'vit.weight_kg': 'Poids', 'vit.temp_c': 'Température',
+  'vit.resting_heart_rate': 'Fréquence cardiaque au repos', 'vit.active_energy': 'Énergie active',
+  'vit.today': "Aujourd'hui", 'vit.allVitals': 'Tous les signes', 'vit.p7': '7 jours', 'vit.p30': '30 jours', 'vit.p90': '90 jours',
+  'vit.avg': 'moy', 'vit.readingsN': '{n} mesures', 'vit.reading1': '1 mesure', 'vit.noneToday': "Aucune mesure aujourd'hui", 'vit.noneRange': 'Aucune mesure dans cette période.', 'vit.latest': 'Dernière', 'vit.range': 'plage', 'vit.byDay': 'Par jour',
 
   'jr.title': 'Bilan quotidien', 'jr.subtitle': 'Une note rapide sur votre journée. Votre équipe soignante peut la voir entre les visites.',
   'jr.feeling': 'Comment vous sentez-vous ?', 'jr.pain': 'Niveau de douleur', 'jr.note': 'Quelque chose à signaler à votre équipe ? (gonflement, sommeil, questions…)',
