@@ -102,6 +102,22 @@ export default function Profile() {
   const [nameState, setNameState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   useEffect(() => { setNameDraft(profile?.friendly_name || '') }, [profile?.friendly_name])
 
+  // patient-photos is a private (PHI) bucket, so a public URL 403s. Resolve a
+  // short-lived signed URL from the stored path; fall back to the placeholder.
+  const [photoSrc, setPhotoSrc] = useState<string | null>(null)
+  useEffect(() => {
+    let active = true
+    ;(async () => {
+      const path = profile?.photo_storage_path
+      if (path) {
+        const { data } = await supabase.storage.from('patient-photos').createSignedUrl(path, 3600)
+        if (active && data?.signedUrl) { setPhotoSrc(data.signedUrl); return }
+      }
+      if (active) setPhotoSrc(profile?.photo_url ?? null)
+    })()
+    return () => { active = false }
+  }, [profile?.photo_storage_path, profile?.photo_url])
+
   const handleNameSave = async () => {
     if ((profile?.friendly_name || '') === nameDraft.trim()) return
     setNameState('saving')
@@ -173,8 +189,8 @@ export default function Profile() {
               border: `2px solid ${C.violet}44`,
               overflow: 'hidden', display: 'grid', placeItems: 'center',
             }}>
-              {profile.photo_url ? (
-                <img src={profile.photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {photoSrc ? (
+                <img src={photoSrc} alt="" onError={() => setPhotoSrc(null)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
                 <Ico name="user" size={40} color={C.violet} stroke={1.2} />
               )}
