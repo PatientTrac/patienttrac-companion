@@ -6,8 +6,11 @@ import { QrCode } from '../../../lib/QrCode'
 import * as api from '../../../lib/admin-api'
 import type { GeneratedInvite } from '../../../lib/admin-api'
 
-type PatientResult = { patientExternalId: string; displayName: string }
+type PatientResult = { patientExternalId: string; displayName: string; dob?: string | null }
 type Props = { onClose: () => void; patientExternalId?: string }
+
+// Format an ISO DOB (YYYY-MM-DD) as a local date with no timezone shift.
+const fmtDob = (s?: string | null) => { if (!s) return ''; const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString() }
 
 export default function GenerateInviteModal({ onClose, patientExternalId: initialId }: Props) {
   const [query, setQuery]               = useState('')
@@ -114,7 +117,7 @@ export default function GenerateInviteModal({ onClose, patientExternalId: initia
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{selected.displayName}</div>
                     <div style={{ fontSize: 11.5, color: C.muted, fontFamily: 'Rajdhani,monospace', marginTop: 2 }}>
-                      ID: {selected.patientExternalId}
+                      {selected.dob ? `DOB ${fmtDob(selected.dob)} · ` : ''}ID: {selected.patientExternalId}
                     </div>
                   </div>
                   {!initialId && (
@@ -130,7 +133,7 @@ export default function GenerateInviteModal({ onClose, patientExternalId: initia
                       style={inp}
                       value={query}
                       onChange={e => setQuery(e.target.value)}
-                      placeholder="Search by patient name…"
+                      placeholder="Search by name or DOB…"
                       autoFocus
                     />
                     {searching && (
@@ -155,10 +158,10 @@ export default function GenerateInviteModal({ onClose, patientExternalId: initia
                             color: C.text, cursor: 'pointer', fontSize: 14,
                           }}
                         >
-                          <span style={{ fontWeight: 600 }}>{p.displayName}</span>
-                          <span style={{ fontSize: 11.5, color: C.muted, marginLeft: 8, fontFamily: 'Rajdhani,monospace' }}>
-                            #{p.patientExternalId}
-                          </span>
+                          <div style={{ fontWeight: 600 }}>{p.displayName}</div>
+                          <div style={{ fontSize: 11.5, color: C.muted, marginTop: 2, fontFamily: 'Rajdhani,monospace' }}>
+                            {p.dob ? `DOB ${fmtDob(p.dob)} · ` : ''}#{p.patientExternalId}
+                          </div>
                         </button>
                       ))}
                     </div>
