@@ -4,30 +4,79 @@ The post-registration patient companion — keeps the care relationship going **
 
 Built for recovery- and treatment-heavy journeys: oncology, post-surgery, chronic care, medication adherence, symptom tracking, patient education, and medical billing.
 
-Companion is the **patient-facing app**. The care-team monitoring dashboard ships inside **PatientTrac Forge** at `Admin → Companion` (`/admin/companion`).
+Companion is the **patient-facing web app**. The staff monitoring dashboard for Companion Mobile ships inside this same repo at `/admin/companion-mobile`.
 
 **Stack:** React 18 + TypeScript + Vite 5 · React Router · Supabase (shared PatientTrac clinical schema `cr`) · Netlify Functions · Anthropic Claude API  
-**Brand:** PatientTrac HUD — navy `#060e1c`, gold `#c9a96e`, cyan `#00d4ff`, Companion accent mint `#34d399`. Poppins / Rajdhani / DM Sans / DM Mono.
+**Brand:** PatientTrac HUD — navy `#060e1c`, gold `#c9a96e`, cyan `#00d4ff`, Companion accent mint `#34d399`, admin accent violet `#8b7cff`. Poppins / Rajdhani / DM Sans / DM Mono.
 
 ---
 
-## Current capabilities
+## Patient screens
 
-| # | Screen | What the patient can do |
-|---|--------|------------------------|
-| 1 | **Today** | Daily summary — meds taken, check-in status, latest vital, meals/activity count |
-| 2 | **Medications** | Daily adherence logging; mark doses taken |
-| 3 | **Diet** | Meal and fluid journal with AI nutrition Q&A |
-| 4 | **Exercise** | Movement and rehab log with AI education |
-| 5 | **Vitals & devices** | Manual vitals entry; consumer-device OAuth backbone (Fitbit / Withings) |
-| 6 | **Journal** | Daily check-in — mood, pain (0–10), free-text note; red-flag alerts to care team |
-| 7 | **Treatment & learning** | Care-plan display and guardrailed AI education assistant |
-| 8 | **Messages** | Async patient ↔ care-team messaging |
-| 9 | **Progress** | 30-day adherence trends, pain/mood charting |
-| 10 | **My health record** | Care plan, active medications, lab results (via `@patienttrac/clinical-viewer`), device readings, education entries |
-| 11 | **Billing & accounting** | Invoices, payments, insurance reimbursements, coverage card (primary, co-pay, deductible, co-insurance, OOP), multi-currency (USD + COP); AI document extraction with patient review gate; Edit extraction / Remove with required reason (soft void) |
+| # | Screen | Route | What the patient can do |
+|---|--------|-------|------------------------|
+| 1 | **Today** | `/today` | Daily summary — meds taken, check-in status, latest vital, meals/activity count |
+| 2 | **Medications** | `/medications` | Daily adherence logging; mark doses taken |
+| 3 | **Diet** | `/diet` | Meal and fluid journal with AI nutrition Q&A |
+| 4 | **Exercise** | `/exercise` | Movement and rehab log with AI education |
+| 5 | **Vitals & devices** | `/vitals` | Manual vitals entry; consumer-device OAuth backbone (Fitbit / Withings) |
+| 6 | **Journal** | `/journal` | Daily check-in — mood, pain (0–10), free-text note; red-flag alerts to care team |
+| 7 | **Treatment & learning** | `/treatment` | Care-plan display and guardrailed AI education assistant |
+| 8 | **Messages** | `/messages` | Async patient ↔ care-team messaging |
+| 9 | **Progress** | `/progress` | 30-day adherence trends, pain/mood charting |
+| 10 | **My health record** | `/self-chart` | Care plan, active medications, lab results, device readings, education entries |
+| 11 | **Billing** | `/billing` | Invoices, payments, insurance coverage card, AI document extraction with patient review gate, edit/void |
+| 12 | **Daily log** | `/daily-log` | Full-day timeline view with journaling |
+| 13 | **My Profile** | `/profile` | Read-only demographics, blood type, contact info, photo upload |
 
-**AI education assistant constraints:** does not diagnose, does not change medications, routes clinical concerns back to the care team.
+**AI education assistant:** does not diagnose, does not change medications, routes clinical concerns back to the care team.
+
+---
+
+## Companion Mobile
+
+The **Companion Mobile** system allows patients to pair a native iOS (or Android) app with their PatientTrac account. Once paired, the app syncs vitals, activity, and health data directly from device sensors into the clinical record.
+
+### Pairing flow
+
+```
+staff generates invite code in Admin → Companion Mobile → Invites
+  → QR code + pairing URL generated (https://patienttraccompanion.com/pair?code=PT-XXXX-XXXX)
+  → patient scans QR or taps link → opens /pair landing page
+  → "Open PatientTrac Companion" button fires deep link (patienttraccompanion://pair?code=...)
+  → native app sends code to /api/companion-pair
+  → server verifies HMAC(code), issues access + refresh token pair
+  → app syncs data via /api/companion-ingest
+  → tokens refresh via /api/companion-refresh
+```
+
+### Pairing security model
+
+- Codes are 16-char base-32 (80 bits, unbiased), display format `PT-XXXXXXXX-XXXXXXXX`
+- Codes are **never stored raw** — only `HMAC-SHA256(code, MOBILE_PAIRING_CODE_SECRET)`
+- IP addresses for rate limiting are stored only as HMAC hashes
+- Separate secrets for pairing codes (`MOBILE_PAIRING_CODE_SECRET`) and session tokens (`MOBILE_TOKEN_HASH_SECRET`)
+- 10 failed pairing attempts per IP per 15 minutes (rate-limited)
+- Access tokens expire in `MOBILE_ACCESS_TOKEN_TTL_SECONDS` (default 86400 s)
+- Refresh tokens expire in `MOBILE_REFRESH_TOKEN_TTL_SECONDS` (default 2592000 s / 30 days)
+- Any session can be revoked instantly from the admin Sync Monitor
+
+### Admin dashboard — `/admin/companion-mobile`
+
+Staff-only shell (requires `saas.org_members` row). Sub-navigation:
+
+| Section | What it shows |
+|---------|--------------|
+| **Overview** | Live stats — active sessions, paired devices, syncs in 24 h, failed syncs; clickable tiles navigate to filtered sub-pages |
+| **Invites** | Full invite list; generate new invite with patient search autocomplete; revoke active invites |
+| **Sessions** | All paired mobile sessions, platform, app version, last seen |
+| **Sync Monitor** | Per-patient sync status, error codes, last batch result; filters for errors-only and no-sync-in-7d |
+| **Audit Log** | Full event log — pairings, syncs, revocations |
+| **Settings** | Org-level mobile config |
+
+### `/pair` landing page
+
+Public route (no auth). Reads `?code` from URL, shows "Open PatientTrac Companion" button with deep link scheme, and App Store fallback. Supports Universal Links via `/.well-known/apple-app-site-association` (replace `TEAMID` with Apple Team ID before App Store submission).
 
 ---
 
@@ -35,66 +84,87 @@ Companion is the **patient-facing app**. The care-team monitoring dashboard ship
 
 ### Auth & accounts
 
-- Patients authenticate through **Supabase Auth**, separate from staff TOTP authentication.
-- Patient accounts are linked to `cr.patient` through `cr.patient_account`.
+- Patients authenticate through **Supabase Auth**. Staff auth is separate (TOTP via Forge).
+- Patient accounts are linked to `cr.patient` through `cr.patient_account` (`auth_user_id` column).
 - Account linking uses staff-issued, single-use invite codes (never self-claimed by email).
+- Staff identity is verified server-side by checking `saas.org_members` with the service role key.
 
-### Database migrations (`cr` schema)
+### Database schema (`cr`)
 
 | Migration | Content |
 |-----------|---------|
-| 028 | Companion core module — meds, diet, exercise, vitals, journal |
+| 028 | Companion core — meds, diet, exercise, vitals, journal |
 | 029 | Patient account linking, invite codes |
-| 030 | Clinical connection — Forge care-team dashboard, missed-med flagging |
+| 030 | Clinical connection — Forge dashboard, missed-med flagging |
 | 031 | Messages (patient ↔ care team) |
 | 032 | Patient–care-team messaging schema |
 | 033 | Longitudinal analytics |
 | 034 | RPM eligibility tracking |
 | 035 | Device-sync backbone — Fitbit / Withings OAuth |
 | 036 | Self-Chart Viewer Phase 4 + companion-translate edge function |
-| 037 | Companion Mobile pairing infrastructure |
+| 037 | Companion Mobile pairing infrastructure (`companion_mobile_session`, `companion_mobile_invite`, `companion_mobile_pairing_attempt`, `companion_mobile_audit_event`, `companion_vital`) |
 | 038 | Patient medical accounting — invoices, payments, ERA |
 | 039 | Billing multi-currency and summary RPCs |
 | 040 | Billing upload infrastructure — AI extraction, storage |
 | 041 | Co-insurance column; `companion_commit_billing_upload` RPC |
 | 042 | Void + edit-extraction RPCs; `voided` status on billing uploads |
 
+### Supabase Storage buckets
+
+| Bucket | Access | Use |
+|--------|--------|-----|
+| `billing-uploads` | Private | Patient-uploaded billing documents (invoices, receipts, insurance statements) |
+| `patient-photos` | Public | Patient profile photos — RLS: each patient can only write to their own `{auth_user_id}/` folder; 5 MB limit; images only |
+
 ### Netlify functions
 
-| Function | Purpose |
-|----------|---------|
-| `companion-ai` | Guardrailed AI for treatment / diet / exercise screens |
-| `companion-billing-extract` | AI billing extraction (Claude); extract-only, no auto-post |
-| `companion-connect` | Device OAuth initiation (Fitbit / Withings) |
-| `companion-oauth-callback` | Device OAuth callback |
-| `companion-sync` | Ingest device data |
-| `companion-pair` | Mobile app pairing |
-| `companion-ingest` | Mobile vitals ingest |
-| `companion-refresh` | Mobile session refresh |
-| `mobile-staff-me` | Staff identity for Mobile Admin |
-| `mobile-config` | Org config for Mobile Admin |
-| `mobile-invites` | Invite management for Mobile Admin |
-| `mobile-invite-action` | Issue / revoke invites |
-| `mobile-sessions` | Session list for Mobile Admin |
-| `mobile-session-action` | Revoke mobile sessions |
-| `mobile-sync-monitor` | Sync event log |
-| `mobile-patient-status` | Per-patient status for Mobile Admin |
-| `mobile-audit` | Audit log |
-| `mobile-patient-search` | Patient search for Mobile Admin |
-| `mobile-stats` | Org-level stats for Mobile Admin |
+#### Patient-facing
+
+| Function | Method(s) | Purpose |
+|----------|-----------|---------|
+| `companion-ai` | POST | Guardrailed AI for treatment / diet / exercise screens |
+| `companion-billing-extract` | POST | AI billing extraction (Claude); extract-only, no auto-post |
+| `companion-connect` | GET | Device OAuth initiation (Fitbit / Withings) |
+| `companion-oauth-callback` | GET | Device OAuth callback |
+| `companion-sync` | POST | Ingest device data |
+| `companion-care-plan-current` | GET | Current care plan for the patient |
+| `companion-log-day` | GET/POST | Daily log read and write |
+| `companion-fx-rates` | GET | FX rates for multi-currency billing |
+| `companion-invoice-mark-payment` | POST | Patient submits payment record for review |
+| `companion-invoice-approve-payment` | POST | Staff approves/rejects payment record |
+| `patient-profile` | GET / PATCH | Patient reads own profile; PATCH updates photo URL only |
+
+#### Companion Mobile (staff + native app)
+
+| Function | Method(s) | Purpose |
+|----------|-----------|---------|
+| `companion-pair` | POST | Mobile app pairing — verifies code, issues token pair |
+| `companion-ingest` | POST | Mobile vitals/health data ingest |
+| `companion-refresh` | POST | Refresh expired access token |
+| `mobile-staff-me` | GET | Staff identity check (used by React auth provider) |
+| `mobile-config` | GET / PATCH | Org mobile config |
+| `mobile-invites` | GET | List invites (admin) |
+| `mobile-invite-action` | POST | Generate / revoke invite (admin) |
+| `mobile-sessions` | GET | List active sessions (admin) |
+| `mobile-session-action` | POST | Revoke session (admin) |
+| `mobile-sync-monitor` | GET | Per-patient sync status and error log (admin) |
+| `mobile-patient-status` | GET | Single-patient mobile status (admin) |
+| `mobile-audit` | GET | Audit event log (admin) |
+| `mobile-patient-search` | GET | Patient search autocomplete for invite generation |
+| `mobile-stats` | GET | Org-level stats for overview tiles |
 
 ### Data flow — billing uploads
 
 ```
 patient picks file
-  → supabase.storage 'billing-uploads' (private bucket)
+  → supabase.storage 'billing-uploads' (private)
   → cr.companion_create_billing_upload RPC (registers row)
-  → companion-billing-extract function (Claude reads doc, sets extracted/needs_review)
-  → patient reviews extracted data in Uploads list
+  → companion-billing-extract (Claude reads doc, sets extracted/needs_review)
+  → patient reviews extracted data
   → patient clicks "Post to billing"
   → cr.companion_commit_billing_upload RPC (inserts ledger rows, idempotent)
-  → patient can Edit extraction (re-evaluates postability) or Remove (void with reason)
-  → voided rows hidden by cr.companion_my_billing_uploads; file kept for audit
+  → patient can Edit extraction or Remove (void with required reason)
+  → voided rows hidden from patient view; file kept for audit
 ```
 
 ---
@@ -106,31 +176,56 @@ npm install
 npm run dev      # http://localhost:5177
 ```
 
-## Env
+---
 
-### Client (Vite)
+## Environment variables
+
+### Client (Vite — build time)
 
 ```
 VITE_SUPABASE_URL=...
 VITE_SUPABASE_ANON_KEY=...
 ```
 
-### Netlify function env (set in Netlify site settings → Environment variables)
+### Netlify functions (Netlify site settings → Environment variables)
 
 ```
-ANTHROPIC_API_KEY=...            # companion-ai, companion-billing-extract
+# Supabase
 SUPABASE_URL=...
 SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...    # companion-billing-extract (service role for storage download)
+SUPABASE_SERVICE_ROLE_KEY=...       # Required by all admin + mobile functions
+
+# AI
+ANTHROPIC_API_KEY=...               # companion-ai, companion-billing-extract
+
+# Companion Mobile — pairing
+MOBILE_PAIRING_BASE_URL=https://patienttraccompanion.com/pair
+                                    # Base URL for QR code pairing links
+MOBILE_PAIRING_CODE_SECRET=...      # HMAC secret for pairing codes and IP hashes
+MOBILE_TOKEN_HASH_SECRET=...        # HMAC secret for access/refresh tokens (separate from pairing)
+MOBILE_INGESTION_PUBLIC_URL=https://patienttraccompanion.com/api/companion-ingest
+                                    # Ingest URL returned to the native app after pairing
+MOBILE_ACCESS_TOKEN_TTL_SECONDS=86400    # Access token lifetime (24 h default)
+MOBILE_REFRESH_TOKEN_TTL_SECONDS=2592000 # Refresh token lifetime (30 d default)
+
+# Device OAuth (Fitbit / Withings)
+FITBIT_CLIENT_ID=...
+FITBIT_CLIENT_SECRET=...
+WITHINGS_CLIENT_ID=...
+WITHINGS_CLIENT_SECRET=...
+WITHINGS_API_BASE=https://wbsapi.withings.net
+WITHINGS_AUTH_BASE=https://account.withings.com
+WITHINGS_MEDICAL_GRADE=false        # Set true only for FDA-cleared devices
+OAUTH_STATE_SECRET=...
+SYNC_CRON_SECRET=...
+COMPANION_PUBLIC_URL=https://patienttraccompanion.com
 ```
 
 ---
 
 ## Patient auth & live data
 
-**Required migrations (in order):** `028` through `042` — see table above.
-
-A patient's login is bound to a `cr.patient` record only through a staff-issued, single-use invite code. Patients do not self-claim their clinical record by email.
+A patient's login is bound to a `cr.patient` record only through a staff-issued, single-use invite code.
 
 **Flow:**
 
@@ -138,16 +233,19 @@ A patient's login is bound to a `cr.patient` record only through a staff-issued,
 patient signs up / signs in
   → enters invite code
   → cr.redeem_patient_invite()
-  → auth.uid() links to the patient record
-  → patient logs medications, diet, vitals, journal entries, education, billing docs
-  → care team monitors activity in Forge → /admin/companion
+  → auth_user_id links to cr.patient_account
+  → patient can log medications, diet, vitals, journal, billing docs, view profile
+  → staff monitors in /admin/companion-mobile
 ```
 
-**To issue an invite code for a seeded patient:**
+**To issue an invite code for a seeded patient (SQL):**
 
 ```sql
 select cr.create_patient_invite(<patient_id>);
 ```
+
+**To generate a mobile pairing invite (UI):**  
+Admin → Companion Mobile → Invites → Generate Invite → search patient name or ID → Generate
 
 ---
 
@@ -155,40 +253,43 @@ select cr.create_patient_invite(<patient_id>);
 
 **Location:** `patienttrac-scheduling/src/pages/admin/CompanionCare.tsx` → `/admin/companion`
 
-**The dashboard provides:**
+Provides:
 - Org-scoped Companion patient roster
-- Per-patient monitoring drawer: 7-day medication adherence, journal red flags, vitals, diet, activity feed, open/urgent alerts
+- Per-patient monitoring drawer: 7-day adherence, journal red flags, vitals, diet, activity, alerts
 - Invite / enroll workflow
 
 **Key DB objects (migration 030):**
 - `cr.companion_roster` — org-scoped view
 - `cr.companion_patient_overview(p_patient_id)` — full per-patient feed
-- `cr.flag_missed_meds()` — nightly pg_cron job at 21:00
+- `cr.flag_missed_meds()` — nightly pg_cron at 21:00
 
 ---
 
 ## i18n
 
-Three locales: **EN · ES · FR**. Locale is persisted in `localStorage` (`cmp_lang`) and auto-detected from `navigator.language` on first visit. All patient-facing strings are in `src/lib/i18n.tsx`.
+Three locales: **EN · ES · FR**. Locale persists in `localStorage` (`cmp_lang`), auto-detected from `navigator.language` on first visit. All patient-facing strings live in `src/lib/i18n.tsx`.
 
 ---
 
 ## Compliance notes
 
 - Consumer-wearable vitals are informational and not diagnostic (disclaimers in-app).
-- Billable RPM workflows (CMS 99453 / 99454 / 99457 / 99458) require appropriate operational controls and FDA-cleared devices where applicable. RPM billing is gated on `cr.companion_vital.is_medical_grade` and is **not** enabled by default.
+- Billable RPM workflows (CMS 99453 / 99454 / 99457 / 99458) require appropriate operational controls and FDA-cleared devices. RPM billing is gated on `cr.companion_vital.is_medical_grade` and **not** enabled by default.
 - The education assistant is not a medical device — it does not diagnose, prescribe, or alter medication instructions.
 - Billing uploads and extracted data are retained for audit; no hard deletes. Void sets `extraction_status = 'voided'` with a required patient-supplied reason.
+- Profile photo upload uses Supabase Storage RLS so patients can only write to their own folder; photos are not linked to clinical records.
+- Pairing codes and IP rate-limit data are stored only as HMAC hashes — no raw codes or raw IPs persist after redemption.
 
 ---
 
 ## Still ahead
 
 - Apple Health / Google Health Connect sync
-- Care-plan authoring from Forge
-- Staff billing review in Forge (void + reason + who/when, same audit provenance as Companion)
-- Expanded RPM workflows
 - Push notifications for care-team replies
+- Care-plan authoring from Forge
+- Staff billing review in Forge (void + reason + audit provenance)
+- Expanded RPM workflows
+- Apple Team ID for Universal Links AASA (replace `TEAMID` placeholder before App Store submission)
 
 ---
 
