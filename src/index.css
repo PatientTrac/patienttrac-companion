@@ -1,6 +1,30 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body,#root{margin:0;min-height:100dvh}
 body{background:#020a14;color:#e8eaf0;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ── Ambient "power application" backdrop ─────────────────────
+   App-wide, fixed, behind all content. Soft brand-hue glows
+   (cyan / mint / gold) over deep navy + a faint, masked tech grid
+   so it complements the futuristic UI without hurting readability. */
+body::before{
+  content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(1100px 720px at 88% -6%, rgba(0,212,255,0.11), transparent 60%),
+    radial-gradient(920px 620px at -6% 106%, rgba(52,211,153,0.10), transparent 55%),
+    radial-gradient(760px 560px at 62% 48%, rgba(201,169,110,0.05), transparent 62%),
+    radial-gradient(1200px 900px at 50% 120%, rgba(2,10,20,0.6), transparent 70%),
+    #020a14;
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.6;
+  background-image:
+    linear-gradient(rgba(122,162,255,0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122,162,255,0.045) 1px, transparent 1px);
+  background-size:46px 46px;
+  -webkit-mask-image:radial-gradient(ellipse 95% 85% at 72% 12%, #000 18%, transparent 74%);
+  mask-image:radial-gradient(ellipse 95% 85% at 72% 12%, #000 18%, transparent 74%);
+}
+@media (max-width:900px){ body::after{ background-size:34px 34px; } }
 a{color:inherit}
 h1,h2,h3{font-family:'Rajdhani',sans-serif;margin:0;line-height:1.15}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
