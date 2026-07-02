@@ -33,19 +33,20 @@ export default function CompanionMobile() {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginBottom: 28 }}>
-            <GradientStat icon="mobile"  label="Active sessions"    value={String(stats.activeSessions)}   from={A.from} to={A.to} />
-            <GradientStat icon="qr"      label="Pending invites"    value={String(stats.pendingInvites)}    from="#c9a96e" to="#e8cc9a" />
-            <GradientStat icon="alert"   label="Failed batches 24h" value={String(stats.failedBatches24h)} from="#ff6b6b" to="#ec4899" />
-            <GradientStat icon="vitals"  label="No sync in 7 days"  value={String(stats.noSyncIn7d)}       from="#fbbf24" to="#f59e0b" />
+            <GradientStat icon="mobile"  label="Active sessions"    value={String(stats.activeSessions)}   from={A.from} to={A.to}        onClick={() => navigate('/admin/companion-mobile/sessions?status=active')} />
+            <GradientStat icon="qr"      label="Pending invites"    value={String(stats.pendingInvites)}    from="#c9a96e" to="#e8cc9a"    onClick={() => navigate('/admin/companion-mobile/invites?status=active')} />
+            <GradientStat icon="alert"   label="Failed batches 24h" value={String(stats.failedBatches24h)} from="#ff6b6b" to="#ec4899"    onClick={() => navigate('/admin/companion-mobile/sync-monitor?status=failed&window=24h')} />
+            <GradientStat icon="vitals"  label="No sync in 7 days"  value={String(stats.noSyncIn7d)}       from="#fbbf24" to="#f59e0b"    onClick={() => navigate('/admin/companion-mobile/sync-monitor?status=no_sync&window=7d')} />
           </div>
         </>
       )}
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 28 }}>
-        <ActionBtn icon="qr"     label="Generate Patient Invite" accent={A.c}  onClick={() => setShowInvite(true)} />
-        <ActionBtn icon="vitals" label="Sync Monitor"            accent={A.c}  onClick={() => navigate('/admin/companion-mobile/sync-monitor')} />
-        <ActionBtn icon="filter" label="Sessions"                accent={C.gold} onClick={() => navigate('/admin/companion-mobile/sessions')} />
-        <ActionBtn icon="plan"   label="Audit Log"               accent={C.gold} onClick={() => navigate('/admin/companion-mobile/audit')} />
+        <ActionBtn icon="qr"     label="Generate Patient Invite" accent={A.c}     onClick={() => setShowInvite(true)} />
+        <ActionBtn icon="qr"     label="Invites"                 accent={A.c}     onClick={() => navigate('/admin/companion-mobile/invites')} />
+        <ActionBtn icon="vitals" label="Sync Monitor"            accent={A.c}     onClick={() => navigate('/admin/companion-mobile/sync-monitor')} />
+        <ActionBtn icon="filter" label="Sessions"                accent={C.gold}  onClick={() => navigate('/admin/companion-mobile/sessions')} />
+        <ActionBtn icon="plan"   label="Audit Log"               accent={C.gold}  onClick={() => navigate('/admin/companion-mobile/audit')} />
         <ActionBtn icon="shield" label="Settings"                accent={C.muted} onClick={() => navigate('/admin/companion-mobile/settings')} />
       </div>
 

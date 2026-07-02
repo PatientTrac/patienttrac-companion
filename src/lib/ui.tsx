@@ -126,12 +126,13 @@ export function SectionHeader({ icon, title, sub, color = C.mint }:
 }
 
 // Colourful gradient stat tile
-export function GradientStat({ icon, label, value, from, to }:
-  { icon: string; label: string; value: React.ReactNode; from: string; to: string }) {
+export function GradientStat({ icon, label, value, from, to, onClick }:
+  { icon: string; label: string; value: React.ReactNode; from: string; to: string; onClick?: () => void }) {
   return (
-    <div style={{
+    <div onClick={onClick} style={{
       position: 'relative', overflow: 'hidden', borderRadius: 16, padding: 18,
       background: `linear-gradient(150deg, ${from}26, ${to}10)`, border: `1px solid ${from}33`,
+      cursor: onClick ? 'pointer' : undefined,
     }}>
       <div style={{ position: 'absolute', right: -16, top: -16, width: 80, height: 80, borderRadius: '50%', background: `radial-gradient(circle, ${from}33, transparent 70%)` }} />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>

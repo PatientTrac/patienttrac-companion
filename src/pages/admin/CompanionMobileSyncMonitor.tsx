@@ -1,6 +1,6 @@
 // Admin → Companion Mobile → Sync Monitor
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { C, Ico, SectionHeader, Spinner, useAsync } from '../../lib/ui'
 import * as api from '../../lib/admin-api'
 import type { SyncMonitorItem } from '../../lib/admin-api'
@@ -12,9 +12,11 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function CompanionMobileSyncMonitor() {
+  const [urlParams]                   = useSearchParams()
+  const initStatus                    = urlParams.get('status') || ''
   const [platform, setPlatform]       = useState('')
-  const [errorsOnly, setErrorsOnly]   = useState(false)
-  const [noSyncIn7d, setNoSyncIn7d]   = useState(false)
+  const [errorsOnly, setErrorsOnly]   = useState(initStatus === 'failed')
+  const [noSyncIn7d, setNoSyncIn7d]   = useState(initStatus === 'no_sync')
   const [revoking, setRevoking]       = useState<string | null>(null)
   const [reload, setReload]           = useState(0)
   const navigate = useNavigate()

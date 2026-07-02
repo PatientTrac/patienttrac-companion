@@ -1,5 +1,6 @@
 // Admin → Companion Mobile → Patient Invites
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { C, Card, Ico, SectionHeader, Spinner, useAsync } from '../../lib/ui'
 import * as api from '../../lib/admin-api'
 import type { InviteItem } from '../../lib/admin-api'
@@ -10,7 +11,8 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default function CompanionMobileInvites() {
-  const [statusFilter, setStatusFilter] = useState('')
+  const [urlParams]                     = useSearchParams()
+  const [statusFilter, setStatusFilter] = useState(urlParams.get('status') || '')
   const [showGenerate, setShowGenerate] = useState(false)
   const [revoking, setRevoking] = useState<string | null>(null)
   const [reload, setReload] = useState(0)

@@ -1,28 +1,59 @@
 // GenerateInviteModal — generates a patient invite and shows the pairing code ONCE.
 // After dismissal the raw pairing code is never shown again (cleared from state).
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { C, Card, Ico, Spinner } from '../../../lib/ui'
 import { QrCode } from '../../../lib/QrCode'
 import * as api from '../../../lib/admin-api'
 import type { GeneratedInvite } from '../../../lib/admin-api'
 
+type PatientResult = { patientExternalId: string; displayName: string }
 type Props = { onClose: () => void; patientExternalId?: string }
 
 export default function GenerateInviteModal({ onClose, patientExternalId: initialId }: Props) {
-  const [patientId, setPatientId]   = useState(initialId || '')
-  const [expHours, setExpHours]     = useState('168')
-  const [maxR, setMaxR]             = useState('1')
-  const [loading, setLoading]       = useState(false)
-  const [error, setError]           = useState<string | null>(null)
-  const [generated, setGenerated]   = useState<GeneratedInvite | null>(null)
-  const [copied, setCopied]         = useState(false)
+  const [query, setQuery]               = useState('')
+  const [results, setResults]           = useState<PatientResult[]>([])
+  const [searching, setSearching]       = useState(false)
+  const [selected, setSelected]         = useState<PatientResult | null>(
+    initialId ? { patientExternalId: initialId, displayName: `Patient ${initialId}` } : null
+  )
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [expHours, setExpHours]         = useState('168')
+  const [maxR, setMaxR]                 = useState('1')
+  const [loading, setLoading]           = useState(false)
+  const [error, setError]               = useState<string | null>(null)
+  const [generated, setGenerated]       = useState<GeneratedInvite | null>(null)
+  const [copied, setCopied]             = useState(false)
+
+  // Debounced patient search
+  useEffect(() => {
+    if (selected || query.length < 2) { setResults([]); setShowDropdown(false); return }
+    const timer = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await api.searchPatients(query)
+        setResults(res.items)
+        setShowDropdown(res.items.length > 0)
+      } catch { setResults([]) }
+      finally { setSearching(false) }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [query, selected])
+
+  const selectPatient = (p: PatientResult) => {
+    setSelected(p)
+    setQuery('')
+    setResults([])
+    setShowDropdown(false)
+  }
+
+  const clearSelection = () => { setSelected(null); setQuery('') }
 
   const generate = async () => {
-    if (!patientId.trim()) { setError('Patient ID is required'); return }
+    if (!selected) { setError('Please search and select a patient'); return }
     setLoading(true); setError(null)
     try {
       const result = await api.generateInvite({
-        patientExternalId: patientId.trim(),
+        patientExternalId: selected.patientExternalId,
         expirationHours: parseInt(expHours, 10) || 168,
         maxRedemptions: parseInt(maxR, 10) || 1,
       })
@@ -39,7 +70,6 @@ export default function GenerateInviteModal({ onClose, patientExternalId: initia
   }
 
   const handleClose = () => {
-    // Clear generated invite from state before closing — raw code must not persist in DOM
     setGenerated(null)
     onClose()
   }
@@ -48,14 +78,14 @@ export default function GenerateInviteModal({ onClose, patientExternalId: initia
     background: C.navy900, border: `1px solid ${C.subtle}`, borderRadius: 10,
     padding: '10px 13px', color: C.text, fontSize: 14, width: '100%',
   }
-  const label: React.CSSProperties = { fontSize: 12.5, color: C.muted, display: 'block', marginBottom: 5 }
+  const lbl: React.CSSProperties = { fontSize: 12.5, color: C.muted, display: 'block', marginBottom: 5 }
 
   return (
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(2,10,20,0.85)', zIndex: 200,
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
     }}>
-      <Card style={{ width: '100%', maxWidth: generated ? 520 : 420, maxHeight: '90vh', overflowY: 'auto' }}>
+      <Card style={{ width: '100%', maxWidth: generated ? 520 : 440, maxHeight: '90vh', overflowY: 'auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -71,31 +101,95 @@ export default function GenerateInviteModal({ onClose, patientExternalId: initia
 
         {!generated ? (
           <>
-            <div style={{ marginBottom: 14 }}>
-              <label style={label}>Patient ID *</label>
-              <input
-                style={inp} value={patientId} onChange={e => setPatientId(e.target.value)}
-                placeholder="Enter patient external ID"
-                disabled={!!initialId}
-              />
+            {/* Patient search */}
+            <div style={{ marginBottom: 14, position: 'relative' }}>
+              <label style={lbl}>Patient *</label>
+
+              {selected ? (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  background: `${C.cyan}18`, border: `1px solid ${C.cyan}44`, borderRadius: 10,
+                  padding: '10px 13px',
+                }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{selected.displayName}</div>
+                    <div style={{ fontSize: 11.5, color: C.muted, fontFamily: 'Rajdhani,monospace', marginTop: 2 }}>
+                      ID: {selected.patientExternalId}
+                    </div>
+                  </div>
+                  {!initialId && (
+                    <button onClick={clearSelection} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                      <Ico name="x" size={15} color={C.muted} />
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      style={inp}
+                      value={query}
+                      onChange={e => setQuery(e.target.value)}
+                      placeholder="Search by patient name…"
+                      autoFocus
+                    />
+                    {searching && (
+                      <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)' }}>
+                        <Spinner label="" />
+                      </div>
+                    )}
+                  </div>
+                  {showDropdown && results.length > 0 && (
+                    <div style={{
+                      position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50,
+                      background: C.navy900, border: `1px solid ${C.subtle}`, borderRadius: 10,
+                      marginTop: 4, overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+                    }}>
+                      {results.map(p => (
+                        <button
+                          key={p.patientExternalId}
+                          onClick={() => selectPatient(p)}
+                          style={{
+                            display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px',
+                            background: 'none', border: 'none', borderBottom: `1px solid ${C.subtle}22`,
+                            color: C.text, cursor: 'pointer', fontSize: 14,
+                          }}
+                        >
+                          <span style={{ fontWeight: 600 }}>{p.displayName}</span>
+                          <span style={{ fontSize: 11.5, color: C.muted, marginLeft: 8, fontFamily: 'Rajdhani,monospace' }}>
+                            #{p.patientExternalId}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {query.length >= 2 && !searching && results.length === 0 && (
+                    <p style={{ fontSize: 12.5, color: C.muted, marginTop: 6 }}>No patients found.</p>
+                  )}
+                </>
+              )}
             </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
               <div>
-                <label style={label}>Expiration (hours)</label>
+                <label style={lbl}>Expiration (hours)</label>
                 <input style={inp} type="number" min={1} max={720} value={expHours} onChange={e => setExpHours(e.target.value)} />
               </div>
               <div>
-                <label style={label}>Max redemptions</label>
+                <label style={lbl}>Max redemptions</label>
                 <input style={inp} type="number" min={1} value={maxR} onChange={e => setMaxR(e.target.value)} />
               </div>
             </div>
+
             {error && <p style={{ color: C.red, fontSize: 13, marginBottom: 12 }}>{error}</p>}
             <button
-              onClick={generate} disabled={loading}
+              onClick={generate} disabled={loading || !selected}
               style={{
-                width: '100%', padding: '12px', borderRadius: 10, border: 'none', cursor: loading ? 'default' : 'pointer',
+                width: '100%', padding: '12px', borderRadius: 10, border: 'none',
+                cursor: (loading || !selected) ? 'default' : 'pointer',
                 background: `linear-gradient(135deg, ${C.cyan}, #34d399)`, color: C.navy950,
                 fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                opacity: !selected ? 0.5 : 1,
               }}
             >
               {loading ? <Spinner label="Generating…" /> : <><Ico name="qr" size={17} color={C.navy950} /> Generate Invite</>}
