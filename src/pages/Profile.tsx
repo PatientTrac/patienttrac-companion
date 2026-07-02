@@ -1,8 +1,9 @@
 // Patient-facing "My Profile" page — read-only demographics + photo upload
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { C, Card, Ico, SectionHeader, Spinner, useAsync } from '../lib/ui'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../lib/auth'
+import { useT } from '../lib/i18n'
 
 type Profile = {
   patient_id: number
@@ -32,6 +33,7 @@ type Profile = {
   interpreter_needed: boolean | null
   photo_url: string | null
   photo_storage_path: string | null
+  friendly_name: string | null
 }
 
 async function fetchProfile(): Promise<Profile> {
@@ -52,6 +54,16 @@ async function savePhotoUrl(photoUrl: string, photoStoragePath: string) {
     body: JSON.stringify({ photoUrl, photoStoragePath }),
   })
   if (!res.ok) throw new Error((await res.json()).error?.message || 'Could not save photo')
+}
+
+async function saveFriendlyName(friendlyName: string) {
+  const { data: { session } } = await supabase.auth.getSession()
+  const res = await fetch('/api/patient-profile', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+    body: JSON.stringify({ friendlyName }),
+  })
+  if (!res.ok) throw new Error((await res.json()).error?.message || 'Could not save name')
 }
 
 function formatDob(birth: string | null) {
@@ -85,6 +97,21 @@ export default function Profile() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const { t } = useT()
+  const [nameDraft, setNameDraft] = useState('')
+  const [nameState, setNameState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  useEffect(() => { setNameDraft(profile?.friendly_name || '') }, [profile?.friendly_name])
+
+  const handleNameSave = async () => {
+    if ((profile?.friendly_name || '') === nameDraft.trim()) return
+    setNameState('saving')
+    try {
+      await saveFriendlyName(nameDraft.trim())
+      setNameState('saved')
+      reload()
+    } catch { setNameState('error') }
+    setTimeout(() => setNameState('idle'), 2000)
+  }
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -180,6 +207,39 @@ export default function Profile() {
               </div>
             )}
             {uploadError && <p style={{ fontSize: 12, color: C.red, marginTop: 6 }}>{uploadError}</p>}
+
+            {/* Friendly name — the one patient-editable name field */}
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 4 }}>
+                {t('profile.friendlyName')}
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  value={nameDraft}
+                  maxLength={60}
+                  placeholder={t('profile.friendlyNamePlaceholder')}
+                  onChange={e => setNameDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter') handleNameSave() }}
+                  aria-label={t('profile.friendlyName')}
+                  style={{
+                    background: C.navy800, color: C.text, border: `1px solid ${C.subtle}66`,
+                    borderRadius: 9, padding: '8px 11px', fontSize: 14, minWidth: 180,
+                  }}
+                />
+                <button
+                  onClick={handleNameSave}
+                  disabled={nameState === 'saving' || (profile.friendly_name || '') === nameDraft.trim()}
+                  style={{
+                    border: 'none', borderRadius: 9, padding: '9px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                    color: C.navy950,
+                    background: nameState === 'saved' ? C.green : nameState === 'error' ? C.red : `linear-gradient(135deg, ${C.violet}, #6366f1)`,
+                    opacity: nameState === 'saving' || (profile.friendly_name || '') === nameDraft.trim() ? 0.55 : 1,
+                  }}>
+                  {nameState === 'saving' ? '…' : nameState === 'saved' ? '✓' : nameState === 'error' ? '!' : t('common.save')}
+                </button>
+              </div>
+              <p style={{ fontSize: 11.5, color: C.subtle, margin: '5px 0 0' }}>{t('profile.friendlyNameHint')}</p>
+            </div>
           </div>
         </div>
       </Card>

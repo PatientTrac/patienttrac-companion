@@ -126,4 +126,4 @@ export const listAudit = (params: Record<string, string> = {}) =>
 // ── Patient search ─────────────────────────────────────────────────────────────
 
 export const searchPatients = (q: string) =>
-  apiFetch<{ items: { patientExternalId: string; displayName: string }[] }>(`/api/mobile-patient-search?q=${encodeURIComponent(q)}`)
+  apiFetch<{ items: { patientExternalId: string; displayName: string; dob: string | null }[] }>(`/api/mobile-patient-search?q=${encodeURIComponent(q)}`)

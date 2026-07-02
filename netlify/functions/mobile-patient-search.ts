@@ -1,8 +1,10 @@
 // mobile-patient-search.ts — org-scoped patient search for invite generation
 // GET /api/mobile-patient-search?q=<name fragment>&limit=20
 //
-// Returns id + display name only. No DOB, diagnosis, or full PII.
-// Required by the admin "Generate Invite" modal patient autocomplete.
+// Returns id, full name, and DOB for authenticated org staff (who already have
+// chart access) so a large practice can disambiguate same-name patients.
+// No diagnosis or other clinical detail. Required by the admin "Generate
+// Invite" modal patient autocomplete.
 
 import { createClient } from '@supabase/supabase-js'
 import { verifyStaffJwt, jsonOk, jsonErr, type NetlifyEvent } from './_mobile-helpers'
@@ -27,18 +29,18 @@ export const handler = async (event: NetlifyEvent) => {
   // cr.patient schema: assumes first_name, last_name columns (standard PatientTrac clinical schema).
   // Falls back gracefully if columns differ — the catch returns an empty list rather than crashing.
   try {
-    let query = admin.schema('cr').from('patient')
-      .select('patient_id, first_name, last_name')
+    // Match on a name fragment, an exact patient_id, or an exact DOB (when the
+    // query parses as a date). org_id scoping is a separate AND filter.
+    const orParts = [`first_name.ilike.${term}`, `last_name.ilike.${term}`]
+    if (numericId !== null) orParts.push(`patient_id.eq.${numericId}`)
+    const dob = parseDob(trimmed)
+    if (dob) orParts.push(`birth.eq.${dob}`)
+
+    const { data, error } = await admin.schema('cr').from('patient')
+      .select('patient_id, first_name, last_name, birth')
       .eq('org_id', staff.orgId)
-
-    if (numericId !== null) {
-      // Numeric query: match patient_id exactly OR name fragment
-      query = query.or(`patient_id.eq.${numericId},first_name.ilike.${term},last_name.ilike.${term}`)
-    } else {
-      query = query.or(`first_name.ilike.${term},last_name.ilike.${term}`)
-    }
-
-    const { data, error } = await query.limit(limit)
+      .or(orParts.join(','))
+      .limit(limit)
 
     if (error) throw error
 
@@ -46,6 +48,7 @@ export const handler = async (event: NetlifyEvent) => {
       items: (data || []).map(p => ({
         patientExternalId: String(p.patient_id),
         displayName: formatName(p.first_name as string, p.last_name as string),
+        dob: (p.birth as string | null) ?? null,
       })),
     })
   } catch (e: any) {
@@ -59,7 +62,17 @@ function formatName(first: string, last: string): string {
   const f = (first || '').trim()
   const l = (last || '').trim()
   if (!f && !l) return 'Unknown Patient'
-  if (!l) return f
-  if (!f) return l
-  return `${f} ${l[0]}.`
+  return [f, l].filter(Boolean).join(' ')
+}
+
+// Parse a typed DOB (YYYY-MM-DD or M/D/YYYY) into an ISO date, or null if it
+// isn't a valid calendar date — guards the .or() from a bad date literal that
+// would otherwise fail the whole query.
+function parseDob(s: string): string | null {
+  let y = 0, mo = 0, d = 0
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
+  if (m) { y = +m[1]; mo = +m[2]; d = +m[3] }
+  else { m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if (m) { mo = +m[1]; d = +m[2]; y = +m[3] } }
+  if (!m || mo < 1 || mo > 12 || d < 1 || d > 31 || y < 1900 || y > 2100) return null
+  return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`
 }

@@ -28,12 +28,12 @@ async function verifyPatient(headers: Record<string, string>, admin: ReturnType<
   if (!data?.user) return null
 
   const { data: acct } = await admin.schema('cr').from('patient_account')
-    .select('patient_id, org_id')
+    .select('patient_id, org_id, friendly_name')
     .eq('auth_user_id', data.user.id)
     .maybeSingle()
 
   if (!acct) return null
-  return { userId: data.user.id, patientId: acct.patient_id as number, orgId: acct.org_id as string }
+  return { userId: data.user.id, patientId: acct.patient_id as number, orgId: acct.org_id as string, friendlyName: (acct as any).friendly_name as string | null }
 }
 
 export const handler = async (event: NetlifyEvent) => {
@@ -55,17 +55,31 @@ export const handler = async (event: NetlifyEvent) => {
     }
     if (!data) return jsonErr(404, 'NOT_FOUND', 'Profile not found')
 
-    return jsonOk({ profile: data })
+    return jsonOk({ profile: { ...data, friendly_name: patient.friendlyName ?? null } })
   }
 
   if (event.httpMethod === 'PATCH') {
-    let body: { photoUrl?: string; photoStoragePath?: string }
+    let body: { photoUrl?: string; photoStoragePath?: string; friendlyName?: string | null }
     try { body = JSON.parse(event.body || '{}') }
     catch { return jsonErr(400, 'BAD_REQUEST', 'Invalid JSON') }
 
     const updates: Record<string, string | null> = {}
     if ('photoUrl' in body) updates.photo_url = body.photoUrl ?? null
     if ('photoStoragePath' in body) updates.photo_storage_path = body.photoStoragePath ?? null
+
+    // Friendly name — companion-level preference on cr.patient_account
+    if ('friendlyName' in body) {
+      const raw = body.friendlyName == null ? '' : String(body.friendlyName)
+      const clean = raw.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 60)
+      const { error: fnErr } = await admin.schema('cr').from('patient_account')
+        .update({ friendly_name: clean || null })
+        .eq('patient_id', patient.patientId)
+      if (fnErr) {
+        console.error('[patient-profile PATCH friendly_name]', fnErr.message)
+        return jsonErr(500, 'DB_ERROR', 'Could not save name')
+      }
+      if (!Object.keys(updates).length) return jsonOk({ ok: true })
+    }
 
     if (!Object.keys(updates).length) return jsonErr(400, 'BAD_REQUEST', 'Nothing to update')
 
