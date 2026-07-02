@@ -1,6 +1,6 @@
 import { NavLink, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { C, PMark, Ico, Spinner, LanguageSwitcher, ACCENTS } from './lib/ui'
-import { Glow } from './lib/art'
+import { Glow, AppBackdrop } from './lib/art'
 import { I18nProvider, useT } from './lib/i18n'
 import { AuthProvider, useAuth } from './lib/auth'
 import AdminShell from './lib/AdminShell'
@@ -156,6 +156,7 @@ function Gate() {
 export default function App() {
   return (
     <I18nProvider>
+      <AppBackdrop />
       <Routes>
         <Route path="/pair" element={<Pair />} />
         <Route path="*" element={<AuthProvider><Gate /></AuthProvider>} />
