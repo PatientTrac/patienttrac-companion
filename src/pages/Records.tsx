@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { C, Card, Ico, Button, Input, Spinner, SectionHeader, useAsync } from '../lib/ui'
 import { useT } from '../lib/i18n'
 import { parseGs1 } from '../lib/gs1'
@@ -34,6 +34,7 @@ export default function Records() {
   const [kind, setKind] = useState<RecordKind>('implant')
   const { data, loading, error, reload } = useAsync(() => listRecords(kind), [kind])
   const [adding, setAdding] = useState(false)
+  const [open, setOpen] = useState<PatientRecord | null>(null)
   const records = data ?? []
 
   return (
@@ -66,64 +67,170 @@ export default function Records() {
       )}
 
       {!loading && !error && records.length > 0 && (
-        <div style={{ display: 'grid', gap: 12 }}>
-          {records.map(r => <RecordCard key={r.id} r={r} onDeleted={reload} />)}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+          {records.map(r => <RecordTile key={r.id} r={r} onOpen={() => setOpen(r)} />)}
         </div>
       )}
 
       {adding && <RecordForm kind={kind} onClose={() => setAdding(false)} onSaved={() => { setAdding(false); reload() }} />}
+      {open && <RecordGallery r={open} onClose={() => setOpen(null)} onDeleted={reload} />}
     </div>
   )
 }
 
-function RecordCard({ r, onDeleted }: { r: PatientRecord; onDeleted: () => void }) {
+const isImg = (mime: string) => (mime || '').startsWith('image/')
+
+// Resolve signed URLs for a set of file paths (private bucket) into a path->url map.
+function useSignedUrls(paths: string[]) {
+  const key = paths.join('|')
+  const [urls, setUrls] = useState<Record<string, string>>({})
+  useEffect(() => {
+    let active = true
+    Promise.all(paths.map(async p => [p, await fileUrl(p)] as const))
+      .then(pairs => { if (active) setUrls(Object.fromEntries(pairs.filter(([, u]) => u) as [string, string][])) })
+    return () => { active = false }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+  return urls
+}
+
+// Grid tile: a document preview strip + the record's headline data. Click → gallery.
+function RecordTile({ r, onOpen }: { r: PatientRecord; onOpen: () => void }) {
   const { t } = useT()
-  const [busy, setBusy] = useState(false)
   const c = KIND_UI[r.kind].color
   const detail = r.detail || {}
+  const files = r.files || []
+  const preview = files.slice(0, 4)
+  const thumbs = useSignedUrls(preview.filter(f => isImg(f.mime)).map(f => f.path))
   const chips = FIELDS[r.kind]
     .filter(f => detail[f.key] !== undefined && detail[f.key] !== '' && detail[f.key] !== false)
-    .map(f => `${f.label}: ${f.type === 'checkbox' ? '✓' : String(detail[f.key])}`)
+    .slice(0, 3).map(f => `${f.label}: ${f.type === 'checkbox' ? '✓' : String(detail[f.key])}`)
 
-  const open = async (path: string) => { const u = await fileUrl(path); if (u) window.open(u, '_blank', 'noopener') }
-  const remove = async () => {
+  return (
+    <div onClick={onOpen} role="button" tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter') onOpen() }}
+      style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', borderRadius: 16, overflow: 'hidden',
+        background: 'linear-gradient(180deg, rgba(15,32,64,.5), rgba(6,14,28,.5))', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div style={{ position: 'relative', height: 116, display: 'grid', gridTemplateColumns: preview.length > 1 ? '1fr 1fr' : '1fr', gridAutoRows: '1fr', gap: 2, background: C.navy950 }}>
+        {preview.length === 0 ? (
+          <div style={{ display: 'grid', placeItems: 'center', background: `${c}10` }}><Ico name={KIND_UI[r.kind].icon} size={30} color={c} /></div>
+        ) : preview.map((f, i) => (
+          <div key={i} style={{ overflow: 'hidden', background: C.navy900, display: 'grid', placeItems: 'center' }}>
+            {isImg(f.mime) && thumbs[f.path]
+              ? <img src={thumbs[f.path]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <Ico name="billing" size={22} color={C.muted} />}
+          </div>
+        ))}
+        {files.length > 0 && (
+          <span style={{ position: 'absolute', bottom: 6, right: 6, fontSize: 11, background: 'rgba(2,10,20,.78)', color: C.text, borderRadius: 6, padding: '2px 7px', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <Ico name="billing" size={11} color={C.text} />{files.length}
+          </span>
+        )}
+      </div>
+      <div style={{ padding: 14, flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: c, flex: '0 0 auto' }} />
+          <span style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 15, color: C.text, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title || t('rec.tab.' + r.kind)}</span>
+          {r.record_date && <span style={{ fontSize: 11, color: C.muted, fontFamily: 'DM Mono,monospace', flex: '0 0 auto' }}>{r.record_date}</span>}
+        </div>
+        {chips.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+            {chips.map((ch, i) => <span key={i} style={{ fontSize: 11, color: C.muted, background: C.navy900, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, padding: '2px 7px', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ch}</span>)}
+          </div>
+        )}
+        {r.notes && <p style={{ fontSize: 12.5, color: C.muted, margin: 0, lineHeight: 1.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{r.notes}</p>}
+      </div>
+    </div>
+  )
+}
+
+const navBtn = (side: 'left' | 'right'): React.CSSProperties => ({
+  position: 'absolute', top: '50%', left: side === 'left' ? 8 : undefined, right: side === 'right' ? 8 : undefined,
+  transform: side === 'left' ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)',
+  background: 'rgba(2,10,20,.6)', border: '1px solid rgba(255,255,255,.14)', borderRadius: '50%', width: 34, height: 34,
+  cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 0,
+})
+
+// Full document gallery/lightbox for one record + its structured data.
+function RecordGallery({ r, onClose, onDeleted }: { r: PatientRecord; onClose: () => void; onDeleted: () => void }) {
+  const { t } = useT()
+  const c = KIND_UI[r.kind].color
+  const files = r.files || []
+  const detail = r.detail || {}
+  const rows = FIELDS[r.kind].filter(f => detail[f.key] !== undefined && detail[f.key] !== '' && detail[f.key] !== false)
+  const [idx, setIdx] = useState(0)
+  const [busy, setBusy] = useState(false)
+  const urls = useSignedUrls(files.map(f => f.path))
+  const f = files[idx]
+  const url = f ? urls[f.path] : undefined
+
+  const del = async () => {
     if (!window.confirm(t('rec.confirmDelete'))) return
     setBusy(true)
-    try { await deleteRecord(r.id, r.files); onDeleted() } finally { setBusy(false) }
+    try { await deleteRecord(r.id, files); onDeleted(); onClose() } finally { setBusy(false) }
   }
 
   return (
-    <Card>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ width: 38, height: 38, borderRadius: 11, display: 'grid', placeItems: 'center', background: `${c}18`, border: `1px solid ${c}33`, flex: '0 0 auto' }}>
-          <Ico name={KIND_UI[r.kind].icon} size={19} color={c} />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
-            <span style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 16, color: C.text }}>{r.title || t('rec.tab.' + r.kind)}</span>
-            {r.record_date && <span style={{ fontSize: 12, color: C.muted, fontFamily: 'DM Mono,monospace' }}>{r.record_date}</span>}
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(2,10,20,0.92)', zIndex: 250, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={(e: React.MouseEvent) => e.stopPropagation()} style={{ width: '100%', maxWidth: 780 }}>
+      <Card style={{ maxHeight: '92vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, display: 'grid', placeItems: 'center', background: `${c}18`, border: `1px solid ${c}33`, flex: '0 0 auto' }}><Ico name={KIND_UI[r.kind].icon} size={18} color={c} /></div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'Rajdhani,sans-serif', fontWeight: 700, fontSize: 18, color: C.text }}>{r.title || t('rec.tab.' + r.kind)}</div>
+            {r.record_date && <div style={{ fontSize: 12, color: C.muted, fontFamily: 'DM Mono,monospace' }}>{r.record_date}</div>}
           </div>
-          {chips.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-              {chips.map((ch, i) => <span key={i} style={{ fontSize: 11.5, color: C.muted, background: C.navy900, border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, padding: '3px 8px' }}>{ch}</span>)}
+          <button onClick={del} disabled={busy} aria-label={t('rec.delete')} style={{ background: 'none', border: 'none', cursor: busy ? 'default' : 'pointer', padding: 6 }}><Ico name="revoke" size={17} color={C.muted} /></button>
+          <button onClick={onClose} aria-label={t('rec.cancel')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6 }}><Ico name="x" size={18} color={C.muted} /></button>
+        </div>
+
+        {files.length > 0 ? (
+          <>
+            <div style={{ position: 'relative', background: C.navy950, borderRadius: 12, overflow: 'hidden', minHeight: 300, display: 'grid', placeItems: 'center' }}>
+              {!url ? <Spinner label="" />
+                : isImg(f.mime) ? <img src={url} alt={f.name} style={{ maxWidth: '100%', maxHeight: '60vh', objectFit: 'contain' }} />
+                : <iframe src={url} title={f.name} style={{ width: '100%', height: '60vh', border: 'none', background: '#fff' }} />}
+              {files.length > 1 && (
+                <>
+                  <button onClick={() => setIdx(i => (i - 1 + files.length) % files.length)} style={navBtn('left')} aria-label="Previous"><Ico name="chevron" size={18} color={C.text} /></button>
+                  <button onClick={() => setIdx(i => (i + 1) % files.length)} style={navBtn('right')} aria-label="Next"><Ico name="chevron" size={18} color={C.text} /></button>
+                </>
+              )}
             </div>
-          )}
-          {r.notes && <p style={{ fontSize: 13, color: C.muted, margin: '8px 0 0', lineHeight: 1.5 }}>{r.notes}</p>}
-          {r.files?.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-              {r.files.map((f, i) => (
-                <button key={i} onClick={() => open(f.path)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.cyan, background: `${C.cyan}12`, border: `1px solid ${C.cyan}33`, borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}>
-                  <Ico name="billing" size={13} color={C.cyan} /> {f.name}
-                </button>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8, gap: 10 }}>
+              <span style={{ fontSize: 12, color: C.muted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name} · {idx + 1}/{files.length}</span>
+              {url && <a href={url} target="_blank" rel="noopener" style={{ fontSize: 12, color: C.cyan, flex: '0 0 auto' }}>{t('rec.open')}</a>}
+            </div>
+            {files.length > 1 && (
+              <div style={{ display: 'flex', gap: 6, marginTop: 10, overflowX: 'auto' }}>
+                {files.map((ff, i) => (
+                  <button key={i} onClick={() => setIdx(i)} aria-label={ff.name} style={{ flex: '0 0 auto', width: 54, height: 54, borderRadius: 8, overflow: 'hidden', border: `2px solid ${i === idx ? c : 'transparent'}`, background: C.navy900, cursor: 'pointer', display: 'grid', placeItems: 'center', padding: 0 }}>
+                    {isImg(ff.mime) && urls[ff.path] ? <img src={urls[ff.path]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Ico name="billing" size={18} color={C.muted} />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <p style={{ color: C.subtle, fontSize: 13, margin: '4px 0' }}>{t('rec.noFiles')}</p>
+        )}
+
+        {(rows.length > 0 || r.notes) && (
+          <div style={{ marginTop: 16, borderTop: `1px solid ${C.subtle}55`, paddingTop: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px 18px' }}>
+              {rows.map(fd => (
+                <div key={fd.key} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 13 }}>
+                  <span style={{ color: C.muted }}>{fd.label}</span>
+                  <span style={{ color: C.text, textAlign: 'right', wordBreak: 'break-word' }}>{fd.type === 'checkbox' ? '✓' : String(detail[fd.key])}</span>
+                </div>
               ))}
             </div>
-          )}
-        </div>
-        <button onClick={remove} disabled={busy} aria-label={t('rec.delete')} style={{ background: 'none', border: 'none', cursor: busy ? 'default' : 'pointer', padding: 4, flex: '0 0 auto' }}>
-          <Ico name="revoke" size={16} color={C.muted} />
-        </button>
+            {r.notes && <p style={{ fontSize: 13, color: C.muted, marginTop: 12, lineHeight: 1.6 }}>{r.notes}</p>}
+          </div>
+        )}
+      </Card>
       </div>
-    </Card>
+    </div>
   )
 }
 
