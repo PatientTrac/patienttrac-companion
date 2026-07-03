@@ -107,6 +107,7 @@ const EN: Dict = {
   'rec.addKind.implant': 'Add implant / device', 'rec.addKind.surgical': 'Add surgical procedure', 'rec.addKind.lab': 'Add lab result', 'rec.addKind.radiology': 'Add imaging study',
   'rec.f.title': 'Name', 'rec.f.date': 'Date', 'rec.f.notes': 'Notes', 'rec.f.files': 'Attach files (photo or PDF)',
   'rec.f.titlePh.implant': 'e.g. Port-a-Cath (Celsite ST201F)', 'rec.f.titlePh.surgical': 'e.g. Port placement', 'rec.f.titlePh.lab': 'e.g. CBC, CMP', 'rec.f.titlePh.radiology': 'e.g. Chest CT',
+  'rec.open': 'Open', 'rec.noFiles': 'No files attached to this record.',
 
   'jr.title': 'Daily check-in', 'jr.subtitle': 'A quick note on how today went. Your care team can see this between visits.',
   'jr.feeling': 'How are you feeling?', 'jr.pain': 'Pain level', 'jr.note': 'Anything you want your team to know? (swelling, sleep, questions…)',
@@ -303,6 +304,7 @@ const ES: Dict = {
   'rec.addKind.implant': 'Agregar implante / dispositivo', 'rec.addKind.surgical': 'Agregar procedimiento quirúrgico', 'rec.addKind.lab': 'Agregar resultado de laboratorio', 'rec.addKind.radiology': 'Agregar estudio de imagen',
   'rec.f.title': 'Nombre', 'rec.f.date': 'Fecha', 'rec.f.notes': 'Notas', 'rec.f.files': 'Adjuntar archivos (foto o PDF)',
   'rec.f.titlePh.implant': 'p. ej. Port-a-Cath (Celsite ST201F)', 'rec.f.titlePh.surgical': 'p. ej. Colocación de port', 'rec.f.titlePh.lab': 'p. ej. Hemograma, química', 'rec.f.titlePh.radiology': 'p. ej. TC de tórax',
+  'rec.open': 'Abrir', 'rec.noFiles': 'Este registro no tiene archivos adjuntos.',
 
   'jr.title': 'Registro diario', 'jr.subtitle': 'Una nota rápida sobre cómo fue tu día. Tu equipo de cuidado puede verla entre visitas.',
   'jr.feeling': '¿Cómo te sientes?', 'jr.pain': 'Nivel de dolor', 'jr.note': '¿Algo que quieras que sepa tu equipo? (hinchazón, sueño, preguntas…)',
@@ -499,6 +501,7 @@ const FR: Dict = {
   'rec.addKind.implant': 'Ajouter un implant / dispositif', 'rec.addKind.surgical': 'Ajouter une intervention', 'rec.addKind.lab': "Ajouter un résultat d'analyse", 'rec.addKind.radiology': "Ajouter un examen d'imagerie",
   'rec.f.title': 'Nom', 'rec.f.date': 'Date', 'rec.f.notes': 'Notes', 'rec.f.files': 'Joindre des fichiers (photo ou PDF)',
   'rec.f.titlePh.implant': 'ex. Port-a-Cath (Celsite ST201F)', 'rec.f.titlePh.surgical': 'ex. Pose de port', 'rec.f.titlePh.lab': 'ex. NFS, bilan', 'rec.f.titlePh.radiology': 'ex. Scanner thoracique',
+  'rec.open': 'Ouvrir', 'rec.noFiles': 'Aucun fichier joint à ce dossier.',
 
   'jr.title': 'Bilan quotidien', 'jr.subtitle': 'Une note rapide sur votre journée. Votre équipe soignante peut la voir entre les visites.',
   'jr.feeling': 'Comment vous sentez-vous ?', 'jr.pain': 'Niveau de douleur', 'jr.note': 'Quelque chose à signaler à votre équipe ? (gonflement, sommeil, questions…)',
