@@ -41,19 +41,33 @@ function agg(rs: Vital[]): Stat {
 // Comparison chart: one bar per day for the selected vital's daily average.
 function BarRow({ series, color, dateLabel }: { series: { dk: string; stat: Stat }[]; color: string; dateLabel: (dk: string) => string }) {
   const avgs = series.map(s => s.stat.avg)
-  const lo = Math.min(...avgs), hi = Math.max(...avgs), span = hi - lo || 1, H = 116
+  const lo = Math.min(...avgs), hi = Math.max(...avgs), span = hi - lo || 1, H = 120
   const many = series.length > 12
+  const last = series.length - 1
   return (
-    <div style={{ overflowX: 'auto', paddingBottom: 2 }}>
-      <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', minHeight: H + 40, minWidth: series.length * 30 }}>
-        {series.map(({ dk, stat }) => {
-          const h = 14 + Math.round(((stat.avg - lo) / span) * (H - 14))
+    <div style={{ overflowX: 'auto', borderRadius: 12, padding: '12px 6px 2px',
+      background: `linear-gradient(180deg, ${color}0a, transparent)`, boxShadow: `inset 0 -1px 0 ${color}33` }}>
+      <div style={{
+        display: 'flex', gap: 6, alignItems: 'flex-end', minHeight: H + 42, minWidth: series.length * 30,
+        backgroundImage: 'repeating-linear-gradient(180deg, transparent 0, transparent 31px, rgba(255,255,255,0.045) 31px, rgba(255,255,255,0.045) 32px)',
+        backgroundSize: '100% 32px', backgroundPosition: '0 6px',
+      }}>
+        {series.map(({ dk, stat }, i) => {
+          const h = 16 + Math.round(((stat.avg - lo) / span) * (H - 16))
+          const hot = i === last
           return (
             <div key={dk} title={`${dateLabel(dk)} · ${fmtN(stat.avg)} ${stat.unit ?? ''} (${fmtN(stat.min)}–${fmtN(stat.max)}, ${stat.count})`}
-              style={{ flex: '1 0 24px', minWidth: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-              <span style={{ fontSize: 10.5, color: C.muted, fontFamily: 'DM Mono,monospace' }}>{fmtN(stat.avg)}</span>
-              <div style={{ width: '68%', maxWidth: 22, height: h, borderRadius: '5px 5px 2px 2px', background: `linear-gradient(180deg, ${color}, ${color}80)` }} />
-              <span style={{ fontSize: 9.5, color: C.subtle, whiteSpace: 'nowrap', transform: many ? 'rotate(-45deg)' : 'none', transformOrigin: 'top center', marginTop: many ? 4 : 0 }}>{dateLabel(dk)}</span>
+              style={{ flex: '1 0 24px', minWidth: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, position: 'relative', zIndex: 1 }}>
+              <span style={{ fontSize: 10.5, color: hot ? color : C.muted, fontFamily: 'DM Mono,monospace', fontWeight: hot ? 700 : 400 }}>{fmtN(stat.avg)}</span>
+              <div className="cmp-bar" style={{
+                position: 'relative', width: '68%', maxWidth: 22, height: h, borderRadius: '6px 6px 2px 2px',
+                background: `linear-gradient(180deg, ${color}, ${color}55)`,
+                boxShadow: `0 0 ${hot ? 16 : 9}px ${color}${hot ? 'aa' : '55'}, inset 0 1px 0 rgba(255,255,255,0.5)`,
+                animationDelay: `${i * 0.03}s`,
+              }}>
+                <span style={{ position: 'absolute', top: -3, left: '50%', transform: 'translateX(-50%)', width: hot ? 6 : 4, height: hot ? 6 : 4, borderRadius: '50%', background: '#fff', boxShadow: `0 0 8px ${color}` }} />
+              </div>
+              <span style={{ fontSize: 9.5, color: hot ? C.text : C.subtle, whiteSpace: 'nowrap', transform: many ? 'rotate(-45deg)' : 'none', transformOrigin: 'top center', marginTop: many ? 4 : 0 }}>{dateLabel(dk)}</span>
             </div>
           )
         })}

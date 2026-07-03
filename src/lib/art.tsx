@@ -1,5 +1,6 @@
 // Offline-safe, brand-colored SVG illustrations.
 // Themes: AI (network glow), patient care + recovery (care scene), vitality (pulse).
+import { useEffect, useRef } from 'react'
 
 export function Glow({ color = '#34d399', size = 380, opacity = 0.22, style }:
   { color?: string; size?: number; opacity?: number; style?: React.CSSProperties }) {
@@ -184,4 +185,57 @@ export function HeroCircuit({ style }: { style?: React.CSSProperties }) {
       <rect x="0" y="0" width="760" height="300" fill="url(#hc-fade)" />
     </svg>
   )
+}
+
+// App-wide ambient "Clinical Intelligence Network" backdrop: glowing cyan nodes
+// + links converging on a gold hub, weighted to the right (where the content
+// column leaves space). Static (drawn once + on resize), pointer-events:none,
+// behind all content. Pairs with the CSS glows/grid in index.css.
+export function AppBackdrop() {
+  const ref = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    const c = ref.current; if (!c) return
+    const ctx = c.getContext('2d'); if (!ctx) return
+    const TAU = Math.PI * 2
+    const draw = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      const w = window.innerWidth, h = window.innerHeight
+      c.width = w * dpr; c.height = h * dpr; c.style.width = w + 'px'; c.style.height = h + 'px'
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h)
+      const N = Math.max(22, Math.min(58, Math.floor((w * h) / 30000)))
+      const nodes = Array.from({ length: N }, () => ({
+        x: (0.18 + 0.82 * Math.pow(Math.random(), 0.7)) * w, // biased to the right
+        y: Math.random() * h,
+        gold: Math.random() < 0.16,
+        r: 1 + Math.random() * 1.6,
+      }))
+      const hub = { x: w * 0.78, y: h * 0.4 }
+      // links between nearby nodes
+      for (let a = 0; a < N; a++) for (let b = a + 1; b < N; b++) {
+        const d = Math.hypot(nodes[a].x - nodes[b].x, nodes[a].y - nodes[b].y)
+        if (d < 150) { ctx.strokeStyle = `rgba(0,212,255,${0.16 * (1 - d / 150)})`; ctx.lineWidth = 1
+          ctx.beginPath(); ctx.moveTo(nodes[a].x, nodes[a].y); ctx.lineTo(nodes[b].x, nodes[b].y); ctx.stroke() }
+      }
+      // gold hub: concentric rings + spokes to the nearest nodes
+      ;[46, 84, 128].forEach((rr, k) => { ctx.strokeStyle = `rgba(212,175,55,${0.22 - k * 0.05})`; ctx.lineWidth = 1
+        ctx.beginPath(); ctx.arc(hub.x, hub.y, rr, 0, TAU); ctx.stroke() })
+      nodes.map(n => ({ n, d: Math.hypot(n.x - hub.x, n.y - hub.y) })).sort((p, q) => p.d - q.d).slice(0, 7)
+        .forEach(o => { ctx.strokeStyle = 'rgba(212,175,55,0.2)'; ctx.lineWidth = 1
+          ctx.beginPath(); ctx.moveTo(hub.x, hub.y); ctx.lineTo(o.n.x, o.n.y); ctx.stroke() })
+      // nodes with soft glow
+      nodes.forEach(n => { ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, TAU)
+        ctx.fillStyle = n.gold ? 'rgba(246,211,141,0.7)' : 'rgba(0,212,255,0.6)'
+        ctx.shadowColor = n.gold ? '#f6d38d' : '#00d4ff'; ctx.shadowBlur = 8; ctx.fill(); ctx.shadowBlur = 0 })
+      // hub core
+      ctx.beginPath(); ctx.arc(hub.x, hub.y, 5, 0, TAU); ctx.fillStyle = '#f6d38d'
+      ctx.shadowColor = '#f6d38d'; ctx.shadowBlur = 18; ctx.fill(); ctx.shadowBlur = 0
+    }
+    draw()
+    let t: ReturnType<typeof setTimeout>
+    const onResize = () => { clearTimeout(t); t = setTimeout(draw, 180) }
+    window.addEventListener('resize', onResize)
+    return () => { window.removeEventListener('resize', onResize); clearTimeout(t) }
+  }, [])
+  return <canvas ref={ref} aria-hidden="true"
+    style={{ position: 'fixed', inset: 0, zIndex: -2, pointerEvents: 'none', opacity: 0.9 }} />
 }

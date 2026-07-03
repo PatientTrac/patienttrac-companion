@@ -1,6 +1,30 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body,#root{margin:0;min-height:100dvh}
 body{background:#020a14;color:#e8eaf0;font-family:'DM Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ── Ambient "power application" backdrop ─────────────────────
+   App-wide, fixed, behind all content. Soft brand-hue glows
+   (cyan / mint / gold) over deep navy + a faint, masked tech grid
+   so it complements the futuristic UI without hurting readability. */
+body::before{
+  content:'';position:fixed;inset:0;z-index:-3;pointer-events:none;
+  background:
+    radial-gradient(1100px 720px at 82% -8%, rgba(0,151,167,0.16), transparent 60%),
+    radial-gradient(960px 600px at 10% 2%, rgba(246,211,141,0.14), transparent 58%),
+    radial-gradient(840px 660px at 56% 46%, rgba(212,175,55,0.08), transparent 62%),
+    radial-gradient(900px 620px at 94% 86%, rgba(0,212,255,0.08), transparent 60%),
+    linear-gradient(135deg,#030712 0%,#07162c 52%,#020a14 100%);
+}
+body::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.75;
+  background-image:
+    linear-gradient(rgba(215,180,106,0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.045) 1px, transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(circle at 60% 28%, #000 0%, transparent 78%);
+  mask-image:radial-gradient(circle at 60% 28%, #000 0%, transparent 78%);
+}
+@media (max-width:900px){ body::after{ background-size:44px 44px; } }
 a{color:inherit}
 h1,h2,h3{font-family:'Rajdhani',sans-serif;margin:0;line-height:1.15}
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
@@ -23,6 +47,10 @@ h1,h2,h3{font-family:'Rajdhani',sans-serif;margin:0;line-height:1.15}
 @media (max-width: 960px) { .dl-columns { grid-template-columns: 1fr; } }
 .cmp-spin { animation: cmpSpin 1s linear infinite; }
 @keyframes cmpSpin { to { transform: rotate(360deg); } }
+
+/* ── Futuristic vitals comparison bars ────────────────────── */
+@keyframes cmpBarGrow { from { transform: scaleY(.02); opacity: .3; } to { transform: scaleY(1); opacity: 1; } }
+.cmp-bar { transform-origin: bottom; animation: cmpBarGrow .55s cubic-bezier(.2,.8,.2,1) both; }
 
 /* ── Responsive app shell (audit H5) ──────────────────────── */
 /* Desktop: fixed sidebar + content. Mobile: single column; the sidebar
